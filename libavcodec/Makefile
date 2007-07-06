@@ -14,6 +14,7 @@ OBJS = allcodecs.o                                                      \
        faanidct.o                                                       \
        fmtconvert.o                                                     \
        imgconvert.o                                                     \
+       inflate.o                                                        \
        jrevdct.o                                                        \
        options.o                                                        \
        parser.o                                                         \
@@ -702,7 +703,7 @@ SKIPHEADERS-$(CONFIG_VAAPI)            += vaapi_internal.h
 SKIPHEADERS-$(CONFIG_VDPAU)            += vdpau.h
 SKIPHEADERS-$(CONFIG_XVMC)             += xvmc.h
 
-TESTPROGS = cabac dct fft fft-fixed h264 iirfilter rangecoder snow
+TESTPROGS = cabac dct fft fft-fixed h264 iirfilter inflate rangecoder snow
 TESTPROGS-$(HAVE_MMX) += motion
 TESTOBJS = dctref.o
 
