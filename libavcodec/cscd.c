@@ -22,10 +22,7 @@
 #include <stdlib.h>
 
 #include "avcodec.h"
-
-#if CONFIG_ZLIB
-#include <zlib.h>
-#endif
+#include "inflate.h"
 #include "libavutil/lzo.h"
 
 typedef struct {
@@ -166,15 +163,11 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
             break;
         }
         case 1: { // zlib compression
-#if CONFIG_ZLIB
-            unsigned long dlen = c->decomp_size;
-            if (uncompress(c->decomp_buf, &dlen, &buf[2], buf_size - 2) != Z_OK)
+            unsigned int dlen = c->decomp_size;
+
+            if (av_inflate_single(c->decomp_buf, &dlen, buf+2, buf_size-2) < 0)
                 av_log(avctx, AV_LOG_ERROR, "error during zlib decompression\n");
             break;
-#else
-            av_log(avctx, AV_LOG_ERROR, "compiled without zlib support\n");
-            return -1;
-#endif
         }
         default:
             av_log(avctx, AV_LOG_ERROR, "unknown compression\n");
