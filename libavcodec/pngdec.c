@@ -24,13 +24,13 @@
 #include "libavutil/imgutils.h"
 #include "avcodec.h"
 #include "bytestream.h"
+#include "inflate.h"
 #include "png.h"
 
 /* TODO:
  * - add 16 bit depth support
  */
 
-#include <zlib.h>
 
 /* Mask to determine which y pixels can be written in a pass */
 static const uint8_t png_pass_dsp_ymask[NB_PASSES] = {
@@ -370,26 +370,33 @@ static void png_handle_row(PNGDecContext *s)
 
 static int png_decode_idat(PNGDecContext *s, int length)
 {
+    const uint8_t *data = s->bytestream;
+    uint8_t *out = s->crow_buf;
+    unsigned int outsize = s->crow_size;
     int ret;
-    s->zstream.avail_in = length;
-    s->zstream.next_in = s->bytestream;
+
     s->bytestream += length;
 
     if(s->bytestream > s->bytestream_end)
         return -1;
 
     /* decode one line if possible */
-    while (s->zstream.avail_in > 0) {
-        ret = inflate(&s->zstream, Z_PARTIAL_FLUSH);
-        if (ret != Z_OK && ret != Z_STREAM_END) {
+    while (length > 0) {
+        ret = av_inflate(s->zstream, out, &outsize, data, length);
+        if (ret < 0) {
             return -1;
         }
-        if (s->zstream.avail_out == 0) {
+
+        out += outsize;
+        data += ret;
+        length -= ret;
+
+        if (out == s->crow_buf + s->crow_size) {
             if (!(s->state & PNG_ALLIMAGE)) {
                 png_handle_row(s);
             }
-            s->zstream.avail_out = s->crow_size;
-            s->zstream.next_out = s->crow_buf;
+            outsize = s->crow_size;
+            out = s->crow_buf;
         }
     }
     return 0;
@@ -425,11 +432,8 @@ static int decode_frame(AVCodecContext *avctx,
     s->state=0;
 //    memset(s, 0, sizeof(PNGDecContext));
     /* init the zlib */
-    s->zstream.zalloc = ff_png_zalloc;
-    s->zstream.zfree = ff_png_zfree;
-    s->zstream.opaque = NULL;
-    ret = inflateInit(&s->zstream);
-    if (ret != Z_OK)
+    s->zstream = av_inflate_open();
+    if (!s->zstream)
         return -1;
     for(;;) {
         int tag32;
@@ -549,8 +553,6 @@ static int decode_frame(AVCodecContext *avctx,
 
                 /* we want crow_buf+1 to be 16-byte aligned */
                 s->crow_buf = crow_buf_base + 15;
-                s->zstream.avail_out = s->crow_size;
-                s->zstream.next_out = s->crow_buf;
             }
             s->state |= PNG_IDAT;
             if (png_decode_idat(s, length) < 0)
@@ -655,7 +657,7 @@ static int decode_frame(AVCodecContext *avctx,
 
     ret = s->bytestream - s->bytestream_start;
  the_end:
-    inflateEnd(&s->zstream);
+    av_inflate_close(s->zstream);
     av_free(crow_buf_base);
     s->crow_buf = NULL;
     av_freep(&s->last_row);
