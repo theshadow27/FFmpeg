@@ -29,8 +29,7 @@
 
 #include "libavutil/intreadwrite.h"
 #include "avcodec.h"
-
-#include <zlib.h>
+#include "inflate.h"
 
 /*
  * Decoder context
@@ -194,7 +193,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
     int buf_size = avpkt->size;
     DxaDecContext * const c = avctx->priv_data;
     uint8_t *outptr, *srcptr, *tmpptr;
-    unsigned long dsize;
+    unsigned int dsize;
     int i, j, compr;
     int stride;
     int orig_buf_size = buf_size;
@@ -233,7 +232,8 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
         compr = buf[4];
 
     dsize = c->dsize;
-    if((compr != 4 && compr != -1) && uncompress(c->decomp_buf, &dsize, buf + 9, buf_size - 9) != Z_OK){
+    if((compr != 4 && compr != -1) &&
+       av_inflate_single(c->decomp_buf, &dsize, buf + 9, buf_size - 9) < 0){
         av_log(avctx, AV_LOG_ERROR, "Uncompress failed!\n");
         return -1;
     }
