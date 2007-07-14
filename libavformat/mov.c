@@ -35,10 +35,7 @@
 #include "riff.h"
 #include "isom.h"
 #include "libavcodec/get_bits.h"
-
-#if CONFIG_ZLIB
-#include <zlib.h>
-#endif
+#include "libavcodec/inflate.h"
 
 /*
  * First version by Francois Revol revol@free.fr
@@ -2222,11 +2219,10 @@ static int mov_read_wide(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 
 static int mov_read_cmov(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 {
-#if CONFIG_ZLIB
     AVIOContext ctx;
     uint8_t *cmov_data;
     uint8_t *moov_data; /* uncompressed data */
-    long cmov_len, moov_len;
+    unsigned int cmov_len, moov_len;
     int ret = -1;
 
     avio_rb32(pb); /* dcom atom */
@@ -2251,7 +2247,7 @@ static int mov_read_cmov(MOVContext *c, AVIOContext *pb, MOVAtom atom)
         return AVERROR(ENOMEM);
     }
     avio_read(pb, cmov_data, cmov_len);
-    if (uncompress (moov_data, (uLongf *) &moov_len, (const Bytef *)cmov_data, cmov_len) != Z_OK)
+    if(av_inflate_single(moov_data, &moov_len, cmov_data, cmov_len) < 0)
         goto free_and_return;
     if (ffio_init_context(&ctx, moov_data, moov_len, 0, NULL, NULL, NULL, NULL) != 0)
         goto free_and_return;
@@ -2262,10 +2258,6 @@ free_and_return:
     av_free(moov_data);
     av_free(cmov_data);
     return ret;
-#else
-    av_log(c->fc, AV_LOG_ERROR, "this file requires zlib support compiled in\n");
-    return -1;
-#endif
 }
 
 /* edit list atom */
