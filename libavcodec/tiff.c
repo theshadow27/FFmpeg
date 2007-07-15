@@ -25,9 +25,7 @@
  */
 
 #include "avcodec.h"
-#if CONFIG_ZLIB
-#include <zlib.h>
-#endif
+#include "inflate.h"
 #include "lzw.h"
 #include "tiff.h"
 #include "faxcompr.h"
@@ -79,28 +77,6 @@ static int tget(const uint8_t **p, int type, int le){
     }
 }
 
-#if CONFIG_ZLIB
-static int tiff_uncompress(uint8_t *dst, unsigned long *len, const uint8_t *src, int size)
-{
-    z_stream zstream;
-    int zret;
-
-    memset(&zstream, 0, sizeof(zstream));
-    zstream.next_in = src;
-    zstream.avail_in = size;
-    zstream.next_out = dst;
-    zstream.avail_out = *len;
-    zret = inflateInit(&zstream);
-    if (zret != Z_OK) {
-        av_log(NULL, AV_LOG_ERROR, "Inflate init error: %d\n", zret);
-        return zret;
-    }
-    zret = inflate(&zstream, Z_SYNC_FLUSH);
-    inflateEnd(&zstream);
-    *len = zstream.total_out;
-    return zret == Z_STREAM_END ? Z_OK : zret;
-}
-#endif
 
 static void av_always_inline horizontal_fill(unsigned int bpp, uint8_t* dst,
                                              int usePtr, const uint8_t *src,
@@ -143,16 +119,13 @@ static int tiff_unpack_strip(TiffContext *s, uint8_t* dst, int stride, const uin
     int c, line, pixels, code;
     const uint8_t *ssrc = src;
     int width = ((s->width * s->bpp) + 7) >> 3;
-#if CONFIG_ZLIB
-    uint8_t *zbuf; unsigned long outlen;
+    uint8_t *zbuf; unsigned int outlen;
 
     if(s->compr == TIFF_DEFLATE || s->compr == TIFF_ADOBE_DEFLATE){
-        int ret;
         outlen = width * lines;
         zbuf = av_malloc(outlen);
-        ret = tiff_uncompress(zbuf, &outlen, src, size);
-        if(ret != Z_OK){
-            av_log(s->avctx, AV_LOG_ERROR, "Uncompressing failed (%lu of %lu) with error %d\n", outlen, (unsigned long)width * lines, ret);
+        if(av_inflate_single(zbuf, &outlen, src, size) < 0){
+            av_log(s->avctx, AV_LOG_ERROR, "Uncompressing failed (%u of %lu)\n", outlen, (unsigned long)width * lines);
             av_free(zbuf);
             return -1;
         }
@@ -169,7 +142,7 @@ static int tiff_unpack_strip(TiffContext *s, uint8_t* dst, int stride, const uin
         av_free(zbuf);
         return 0;
     }
-#endif
+
     if(s->compr == TIFF_LZW){
         if(ff_lzw_decode_init(s->lzw, 8, src, size, FF_LZW_TIFF) < 0){
             av_log(s->avctx, AV_LOG_ERROR, "Error initializing LZW decoder\n");
