@@ -371,8 +371,8 @@ static void png_handle_row(PNGDecContext *s)
 static int png_decode_idat(PNGDecContext *s, int length)
 {
     const uint8_t *data = s->bytestream;
-    uint8_t *out = s->crow_buf;
-    unsigned int outsize = s->crow_size;
+    uint8_t *out = s->crow_buf + s->crow_pos;
+    unsigned int outsize = s->crow_size - s->crow_pos;
     int ret;
 
     s->bytestream += length;
@@ -387,6 +387,7 @@ static int png_decode_idat(PNGDecContext *s, int length)
             return -1;
         }
 
+        s->crow_pos += outsize;
         out += outsize;
         data += ret;
         length -= ret;
@@ -397,6 +398,7 @@ static int png_decode_idat(PNGDecContext *s, int length)
             }
             outsize = s->crow_size;
             out = s->crow_buf;
+            s->crow_pos = 0;
         }
     }
     return 0;
@@ -553,6 +555,7 @@ static int decode_frame(AVCodecContext *avctx,
 
                 /* we want crow_buf+1 to be 16-byte aligned */
                 s->crow_buf = crow_buf_base + 15;
+                s->crow_pos = 0;
             }
             s->state |= PNG_IDAT;
             if (png_decode_idat(s, length) < 0)
