@@ -274,7 +274,7 @@ build_codes(unsigned int ncodes, uint8_t *clen, unsigned int *codes)
             max_code = i;
     }
 
-    dprintf(NULL, "build_codes: ncodes=%d max_code=%d max_bits=%d\n",
+    av_dlog(NULL, "build_codes: ncodes=%d max_code=%d max_bits=%d\n",
             ncodes, max_code, max_bits);
 
     code = 0;
@@ -367,7 +367,7 @@ check_tail(AVInflateContext *ctx, const uint8_t *inbuf, unsigned int insize)
     if (ctx->tailbits) {
         unsigned int rb = get_bits_count(&ctx->gb);
         if (rb >= ctx->tailbits) {
-            dprintf(ctx, "tailbits=%d rb=%d\n", ctx->tailbits, rb);
+            av_dlog(ctx, "tailbits=%d rb=%d\n", ctx->tailbits, rb);
             init_get_bits(&ctx->gb, inbuf, insize * 8);
             skip_bits_long(&ctx->gb, rb - ctx->tailbits);
             ctx->tailbits = 0;
@@ -379,7 +379,7 @@ check_tail(AVInflateContext *ctx, const uint8_t *inbuf, unsigned int insize)
     do {                                                        \
         check_bits(label, gb, n);                               \
         (dst) = what##_bits((gb), (n));                         \
-        dprintf(ctx, "%-9s %-9s %4x %4x\n",                     \
+        av_dlog(ctx, "%-9s %-9s %4x %4x\n",                     \
                 #what, #label, n, dst);                         \
         check_tail(ctx, inbuf, insize);                         \
     } while(0)
@@ -391,7 +391,7 @@ check_tail(AVInflateContext *ctx, const uint8_t *inbuf, unsigned int insize)
     do {                                                        \
         check_bits(label, gb, ctx->tab.bits * 2);               \
         (dst) = get_vlc2(gb, ctx->tab.table, ctx->tab.bits, 2); \
-        dprintf(ctx, "read_vlc  %-9s %4x %c\n", #label,         \
+        av_dlog(ctx, "read_vlc  %-9s %4x %c\n", #label,         \
                 dst, (dst)<127 && (dst)>32? (dst): '.');        \
         check_tail(ctx, inbuf, insize);                         \
     } while(0)
@@ -439,7 +439,7 @@ do {                                                                    \
     ctx->hdist = get_bits(&ctx->gb, 5);                                 \
     ctx->hclen = get_bits(&ctx->gb, 4);                                 \
                                                                         \
-    dprintf(ctx, "hlit=%d hdist=%d hclen=%d\n",                         \
+    av_dlog(ctx, "hlit=%d hdist=%d hclen=%d\n",                         \
             ctx->hlit, ctx->hdist, ctx->hclen);                         \
                                                                         \
     for (ctx->i = 0; ctx->i < ctx->hclen + 4; ctx->i++) {               \
@@ -481,7 +481,7 @@ copy_offset(AVInflateContext *ctx, uint8_t *p,
         unsigned int bp = offset - os;
         unsigned int bl = FFMIN(outlen, bp);
 
-        dprintf(ctx, "os=%d offset=%d outlen=%d bp=%d bufsize=%d bl=%d\n",
+        av_dlog(ctx, "os=%d offset=%d outlen=%d bp=%d bufsize=%d bl=%d\n",
                 os, offset, outlen, bp, ctx->bufsize, bl);
 
         if (bp > ctx->bufsize) {
@@ -520,7 +520,7 @@ av_inflate(AVInflateContext *ctx, uint8_t *outbuf, unsigned int *outsize,
     if (!*outsize)
         return 0;
 
-    dprintf(ctx, "state=%d tailsize=%d skip=%d insize=%d\n",
+    av_dlog(ctx, "state=%d tailsize=%d skip=%d insize=%d\n",
             ctx->state, ctx->tailsize, ctx->skip, insize);
 
     if (ctx->cplen)
@@ -563,12 +563,12 @@ av_inflate(AVInflateContext *ctx, uint8_t *outbuf, unsigned int *outsize,
 
         show_bits(MAGIC, magic, &ctx->gb, 16);
         if (magic == 0x8b1f) {
-            dprintf(ctx, "gzip format\n");
+            av_dlog(ctx, "gzip format\n");
 
             skip_bits(&ctx->gb, 16);
             read_bits(GZCOMP, ctx->gzcomp, &ctx->gb, 8);
             read_bits(GZFLAGS, ctx->gzflags, &ctx->gb, 8);
-            dprintf(ctx, "gzip CM=%d FLG=%x\n", ctx->gzcomp, ctx->gzflags);
+            av_dlog(ctx, "gzip CM=%d FLG=%x\n", ctx->gzcomp, ctx->gzflags);
             ctx->gzskip = 6;
             gzskip(GZHEAD);
             if (ctx->gzflags & 4) {
@@ -594,7 +594,7 @@ av_inflate(AVInflateContext *ctx, uint8_t *outbuf, unsigned int *outsize,
             unsigned flg = magic >> 8;
 
             if (cm == 8 && cinfo <= 7) {
-                dprintf(ctx, "zlib format\n");
+                av_dlog(ctx, "zlib format\n");
 
                 if (flg & 0x20) {   /* FDICT */
                     av_log(ctx, AV_LOG_ERROR, "preset dictionary flag set\n");
@@ -614,7 +614,7 @@ av_inflate(AVInflateContext *ctx, uint8_t *outbuf, unsigned int *outsize,
             ctx->bfinal = get_bits1(&ctx->gb);
             ctx->btype = get_bits(&ctx->gb, 2);
 
-            dprintf(ctx, "bfinal=%d btype=%d\n", ctx->bfinal, ctx->btype);
+            av_dlog(ctx, "bfinal=%d btype=%d\n", ctx->bfinal, ctx->btype);
 
             if (ctx->btype == DEFLATE_TYPE_NOCOMP) {
                 align_get_bits(&ctx->gb);
@@ -740,7 +740,7 @@ outbits:
         ctx->tailsize += isize;
         bytepos = in + isize - inbuf;
 
-        dprintf(ctx, "state=%d bitpos=%d tailbits=%d tailsize=%d "
+        av_dlog(ctx, "state=%d bitpos=%d tailbits=%d tailsize=%d "
                 "skip=%d need=%d\n", ctx->state, bitpos, ctx->tailbits,
                 ctx->tailsize, ctx->skip, needbits);
     } else {
@@ -890,7 +890,7 @@ main(int argc, char **argv)
         do {
             outsize = sizeof(out_buf);
             s = av_inflate(ctx, out_buf, &outsize, in, n);
-            dprintf(ctx, "n=%d s=%d o=%d\n", n, s, outsize);
+            av_dlog(ctx, "n=%d s=%d o=%d\n", n, s, outsize);
 
             if (s < 0)
                 goto err;
