@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include <zlib.h>
+#include "libavcodec/inflate.h"
 
 #include "avcodec.h"
 
@@ -98,10 +99,11 @@ typedef struct PNGDecContext {
     uint8_t *tmp_row;
     int pass;
     int crow_size; /* compressed row size (include filter type) */
+    int crow_pos;
     int row_size; /* decompressed row size */
     int pass_row_size; /* decompress row size of the current pass */
     int y;
-    z_stream zstream;
+    AVInflateContext *zstream;
 
     void (*add_bytes_l2)(uint8_t *dst, uint8_t *src1, uint8_t *src2, int w);
     void (*add_paeth_prediction)(uint8_t *dst, uint8_t *src, uint8_t *top, int w, int bpp);
