@@ -736,6 +736,8 @@ outbits:
         }
 
         isize = FFMIN(sizeof(ctx->tailbuf)/2 - ctx->tailsize, insize);
+        if(sizeof(ctx->tailbuf)/2 < ctx->tailsize)
+            isize=0;
         memcpy(ctx->tailbuf + ctx->tailsize, in, isize);
         ctx->tailsize += isize;
         bytepos = in + isize - inbuf;
