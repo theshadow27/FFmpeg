@@ -389,6 +389,7 @@ static int png_decode_idat(PNGDecContext *s, int length)
 
         s->crow_pos += outsize;
         out += outsize;
+        outsize = s->crow_size - (out - s->crow_buf);
         data += ret;
         length -= ret;
 
