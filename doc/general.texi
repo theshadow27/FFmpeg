@@ -145,6 +145,8 @@ library:
     @tab Video format used by CD+G karaoke disks
 @item Core Audio Format         @tab X @tab X
     @tab Apple Core Audio Format
+@item CDXL format               @tab   @tab X
+    @tab multimedia format for Amiga
 @item CRC testing format        @tab X @tab
 @item Creative Voice            @tab X @tab X
     @tab Created for the Sound Blaster Pro.
@@ -450,6 +452,8 @@ following image formats are supported:
     @tab fourcc: CSCD
 @item CD+G                   @tab     @tab  X
     @tab Video codec for CD+G karaoke disks
+@item CDXL                   @tab     @tab  X
+    @tab Video codec for CDXL format
 @item Chinese AVS video      @tab  E  @tab  X
     @tab AVS1-P2, JiZhun profile, encoding through external library libxavs
 @item Delphine Software International CIN video  @tab     @tab  X

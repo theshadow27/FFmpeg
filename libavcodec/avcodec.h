@@ -258,6 +258,7 @@ enum CodecID {
     CODEC_ID_ESCAPE130  = MKBETAG('E','1','3','0'),
 
     CODEC_ID_G2M        = MKBETAG( 0 ,'G','2','M'),
+    CODEC_ID_CDXL,
 
     /* various PCM "codecs" */
     CODEC_ID_FIRST_AUDIO = 0x10000,     ///< A dummy id pointing at the start of audio codecs
