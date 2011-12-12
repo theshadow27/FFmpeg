@@ -22,6 +22,7 @@
 #include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 #include "bytestream.h"
+#include "get_bits.h"
 
 typedef struct {
     AVFrame frame;
@@ -49,11 +50,12 @@ static int cdxl_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
                              AVPacket *pkt)
 {
     const uint8_t *buf = pkt->data;
-    int i, buf_size = pkt->size;
+    int i, x, plane, buf_size = pkt->size;
     int encoding, video_size, palette_size;
     const uint8_t *palette, *video;
     CDXLContext *c = avctx->priv_data;
     AVFrame * const p = &c->frame;
+    GetBitContext gb;
 
     if (p->data[0])
         avctx->release_buffer(avctx, p);
@@ -71,15 +73,29 @@ static int cdxl_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     palette = buf + 32;
     video = palette + palette_size;
     encoding = buf[1] & 3;
-    av_log(NULL, AV_LOG_ERROR, "p:%d v:%d \n", palette_size, video_size);
+    av_log(NULL, AV_LOG_ERROR, "p:%d v:%d en:%d\n", palette_size, video_size, encoding);
     if (encoding == 0) {
         uint32_t *new_palette = (uint32_t *) c->frame.data[1];
         for (i = 0; i < 256; i++) {
-            new_palette[i] = 0xFF << 16 | bytestream_get_be16(&palette);
+            unsigned xxx= bytestream_get_be16(&palette);
+            unsigned r= (xxx&0xF)*17;
+            unsigned g= (xxx&0xF0)*17>>4;
+            unsigned b= (xxx&0xF00)*17>>8;
+            new_palette[i] = (0xFF << 24) | (r+g*256+b*256*256);
         }
-        memcpy(c->frame.data[0], video, 4624);
-    }
+        memset(c->frame.data[0], 0, c->frame.linesize[0] * avctx->height);
+        init_get_bits(&gb, video, video_size*8);
+        for(plane=0; plane<8; plane++){
+            for(i=0; i<68; i++){
+                for(x=0; x<80; x++){
+                    c->frame.data[0][c->frame.linesize[0]*i + x] |= get_bits1(&gb)<<(plane);
+                }
+            }
+        }
+            memcpy(c->frame.data[0]+ c->frame.linesize[0]*i , video + 80*i, 68);
 
+//         memcpy(c->frame.data[0], video, 4624);
+    }
     *data_size = sizeof(AVFrame);
     *(AVFrame*)data = c->frame;
     return buf_size;
