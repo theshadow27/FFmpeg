@@ -25,6 +25,18 @@
 #include "avutil.h"
 #include "attributes.h"
 
+typedef enum {
+    AV_LOG_CATEGORY_NA = 0,
+    AV_LOG_CATEGORY_INPUT,
+    AV_LOG_CATEGORY_OUTPUT,
+    AV_LOG_CATEGORY_MUXER,
+    AV_LOG_CATEGORY_DEMUXER,
+    AV_LOG_CATEGORY_ENCODER,
+    AV_LOG_CATEGORY_DECODER,
+    AV_LOG_CATEGORY_FILTER,
+    AV_LOG_CATEGORY_BITSTREAM_FILTER,
+}AVLogCategory;
+
 /**
  * Describe the class of an AVClass context structure. That is an
  * arbitrary struct of which the first field is a pointer to an
@@ -86,6 +98,12 @@ typedef struct AVClass {
      * child_class_next iterates over _all possible_ children.
      */
     const struct AVClass* (*child_class_next)(const struct AVClass *prev);
+
+    /**
+     * Category used for vissualization (like color)
+     * available since version (51 << 16 | 56 << 8 | 100)
+     */
+    AVLogCategory category;
 } AVClass;
 
 /* av_log API */
