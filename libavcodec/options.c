@@ -73,6 +73,7 @@ static const AVClass av_codec_context_class = {
     .log_level_offset_offset = offsetof(AVCodecContext, log_level_offset),
     .child_next              = codec_child_next,
     .child_class_next        = codec_child_class_next,
+    .category                = AV_LOG_CATEGORY_DECODER,
 };
 
 #if FF_API_ALLOC_CONTEXT
