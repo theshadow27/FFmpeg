@@ -26,12 +26,18 @@
 #include "get_bits.h"
 
 typedef struct {
+    AVCodecContext *avctx;
     AVFrame         pic;
     GetBitContext   gb;
     uint32_t        queue;
     int             index;
 
     uint8_t         *frame;
+
+    uint8_t         *src, *src_end;
+
+    uint32_t pal[256];
+
 } HNM4VideoContext;
 
 static av_cold int decode_init(AVCodecContext *avctx)
@@ -39,6 +45,7 @@ static av_cold int decode_init(AVCodecContext *avctx)
     HNM4VideoContext * const c = avctx->priv_data;
 
     avctx->pix_fmt = PIX_FMT_PAL8;
+    c->avctx = avctx;
 
     avcodec_get_frame_defaults(&c->pic);
     c->frame = av_mallocz(avctx->height * avctx->width);
@@ -52,45 +59,65 @@ static int get_bit(HNM4VideoContext *c)
 {
     int result;
 
-    if (!c->index && get_bits_left(&c->gb) >= 32) {
-        c->queue = get_bits_long(&c->gb, 32);
+    if (!c->index && c->src_end - c->src >= 4) {
+        c->queue = *(uint32_t*)c->src;
+        c->src += 4;
         c->index = 32;
     }
-    result = c->queue & c->index;
+    result = !!(c->queue & (1LL<<(c->index-1)));
     c->index--;
     return result;
 }
 
 static int decode_intra(HNM4VideoContext *c)
 {
-    uint8_t *dst;
+    AVCodecContext *avctx = c->avctx;
+    uint8_t *dst, *dst_end, *dst_start;
 
-    dst = c->frame;
+    dst_start = dst = c->frame;
+    dst_end = dst + avctx->height * avctx->width;
 
-    skip_bits_long(&c->gb, 32);
+    av_log(0,0, "HEAD %X\n", *(uint32_t*)c->src);
 
-    while (get_bits_left(&c->gb) > 0) {
+    c->src+=4;
+
+    while (c->src_end > c->src) {
         if (get_bit(c)) {
-            *dst++ = get_bits(&c->gb, 8);
+            *dst++ = *c->src++;
         } else {
             int count, offset;
 
             if (get_bit(c)) {
-                count  = get_bits(&c->gb, 3);
-                offset = get_bits(&c->gb, 13) - 8192;
+                count  = *c->src & 7;
+                offset = ((*(uint16_t*)c->src)>>3) - 8192; c->src+=2;
 
                 if (!count)
-                    count = get_bits(&c->gb, 8);
-                if (!count)
+                    count = *c->src++;
+                if (!count) {
                     break;
+                }
             } else {
-                count  = get_bit(c) * 2 + get_bit(c);
-                offset = get_bits(&c->gb, 8) - 256;
+                count  = get_bit(c) * 2;
+                count += get_bit(c);
+                offset = (*c->src++) - 256;
             }
+            count += 2;
 
-            memcpy(dst, dst + offset, count);
+            if(dst_end - dst < count){
+                av_log(0,0, "Overwrite %d\n", count);
+                return 0;
+            }
+            if(dst - dst_start < -offset){
+                av_log(0,0, "Overreference %Ld\n", dst - dst_start + offset);
+                return 0;
+            }
+            while(count--){
+                *dst = dst[offset];
+                dst++;
+            }
         }
     }
+    av_log(0,0, "Remaining %Ld %Ld\n", c->src_end - c->src, dst_end - dst);
 
     return 0;
 }
@@ -102,15 +129,16 @@ static int decode_inter(HNM4VideoContext *c)
 
 static int set_palette(HNM4VideoContext *c, GetByteContext *gb)
 {
-    uint32_t *palette = (uint32_t *)c->pic.data[1];
+    uint32_t *palette = c->pal;
     int start, count, i;
 
     while (bytestream2_get_bytes_left(gb) >= 2) {
         start = bytestream2_get_byte(gb);
         count = bytestream2_get_byte(gb);
 
-        if (start == 0xFF)
+        if (start == 0xFF && count == 0xFF){
             return 0;
+        }
 
         if (count == 0)
             count = 256;
@@ -118,16 +146,17 @@ static int set_palette(HNM4VideoContext *c, GetByteContext *gb)
         if (start + count > AVPALETTE_COUNT)
             return AVERROR_INVALIDDATA;
 
-        for (i = start; i < count; i++) {
+        for (i = start; i < start + count; i++) {
             unsigned r, g, b;
 
-            r = bytestream2_get_byte(gb);
-            g = bytestream2_get_byte(gb);
-            b = bytestream2_get_byte(gb);
+            r = bytestream2_get_byte(gb)*255/63;
+            g = bytestream2_get_byte(gb)*255/63;
+            b = bytestream2_get_byte(gb)*255/63;
 
             palette[i] = 0xFF << 24 | r << 16 | g << 8 | b;
         }
     }
+
     return 0;
 }
 
@@ -140,7 +169,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
     if (c->pic.data[0])
         avctx->release_buffer(avctx, &c->pic);
 
-    c->pic.reference = 0;
+    c->pic.reference = 3;
     if ((ret = avctx->get_buffer(avctx, &c->pic)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
@@ -153,9 +182,11 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
         if ((ret = set_palette(c, &g)) < 0)
             return ret;
     }
+    memcpy(c->pic.data[1], c->pal, 256*4);
 
-    init_get_bits(&c->gb, pkt->data, pkt->size * 8);
-
+//     init_get_bits(&c->gb, pkt->data, pkt->size * 8);
+    c->src = pkt->data;
+    c->src_end = pkt->data + pkt->size;
     if (pkt->flags & AV_PKT_FLAG_KEY)
         ret = decode_intra(c);
     else
@@ -166,11 +197,25 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
 
     dst = c->pic.data[0];
     src = c->frame;
+#if 0
     for (i = 0; i < avctx->height; i++) {
         memcpy(dst, src, avctx->width);
         dst += c->pic.linesize[0];
         src += avctx->width;
     }
+#else
+    for (i = 0; i < avctx->height; i+=2) {
+        int j;
+        for(j=0; j<avctx->width; j+=2){
+            dst[j] = src[2*j];
+            dst[j+c->pic.linesize[0]] = src[2*j+1];
+            dst[j+1] = src[2*j+2];
+            dst[j+c->pic.linesize[0]+1] = src[2*j+3];
+        }
+        dst += 2*c->pic.linesize[0];
+        src += 2*avctx->width;
+    }
+#endif
 
     *data_size      = sizeof(AVFrame);
     *(AVFrame*)data = c->pic;
