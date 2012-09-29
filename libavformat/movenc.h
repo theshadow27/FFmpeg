@@ -106,6 +106,7 @@ typedef struct MOVIndex {
     uint32_t    tref_tag;
     int         tref_id; ///< trackID of the referenced track
     int64_t     start_dts;
+    int64_t     dts_shift;
 
     int         hint_track;   ///< the track that hints this track, -1 if no hint track is set
     int         src_track;    ///< the track that this hint (or tmcd) track describes
@@ -165,6 +166,8 @@ typedef struct MOVMuxContext {
     int max_fragment_size;
     int ism_lookahead;
     AVIOContext *mdat_buf;
+
+    int use_editlist;
 } MOVMuxContext;
 
 #define FF_MOV_FLAG_RTP_HINT 1
