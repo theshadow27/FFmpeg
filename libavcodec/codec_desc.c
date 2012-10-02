@@ -2370,6 +2370,13 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .long_name = NULL_IF_CONFIG_SMALL("iCEDraw text"),
         .props     = AV_CODEC_PROP_INTRA_ONLY,
     },
+    {
+        .id        = AV_CODEC_ID_TAK,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "tak",
+        .long_name = NULL_IF_CONFIG_SMALL("TAK (Tom's lossless Audio Kompressor)"),
+        .props     = AV_CODEC_PROP_LOSSLESS,
+    },
 
 };
 
