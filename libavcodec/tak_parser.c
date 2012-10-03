@@ -40,7 +40,7 @@ static av_cold int tak_init(AVCodecParserContext *s)
     return 0;
 }
 
-#define MAX_HEADER_SIZE 32
+#define MAX_HEADER_SIZE 33
 static int tak_parse(AVCodecParserContext *s, AVCodecContext *avctx,
                      const uint8_t **poutbuf, int *poutbuf_size,
                      const uint8_t *buf, int buf_size)
