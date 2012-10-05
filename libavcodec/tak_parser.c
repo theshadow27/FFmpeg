@@ -50,6 +50,7 @@ static int tak_parse(AVCodecParserContext *s, AVCodecContext *avctx,
     int next = END_NOT_FOUND, i = 0;
     GetBitContext gb;
     int consumed = 0;
+    int needed_size = buf_size ? MAX_HEADER_SIZE : 8;
 
     if (s->flags & PARSER_FLAG_COMPLETE_FRAMES) {
         *poutbuf      = buf;
@@ -57,8 +58,8 @@ static int tak_parse(AVCodecParserContext *s, AVCodecContext *avctx,
         return buf_size;
     }
 
-    while(buf_size) {
-        if(t->index + MAX_HEADER_SIZE > pc->index){
+    while(buf_size || t->index + needed_size <= pc->index) {
+        if(buf_size && t->index + MAX_HEADER_SIZE > pc->index){
             int tmp_buf_size = FFMIN(2*MAX_HEADER_SIZE, buf_size);
             const uint8_t *tmp_buf = buf;
             ff_combine_frame(pc, END_NOT_FOUND, &tmp_buf, &tmp_buf_size);
@@ -66,10 +67,10 @@ static int tak_parse(AVCodecParserContext *s, AVCodecContext *avctx,
             buf      += tmp_buf_size;
             buf_size -= tmp_buf_size;
         }
-        for(; t->index + MAX_HEADER_SIZE <= pc->index; t->index++){
+        for(; t->index + needed_size <= pc->index; t->index++){
             if (pc->buffer[ t->index ] == 0xFF && pc->buffer[ t->index+1 ] == 0xA0) {
                 TAKStreamInfo ti;
-                init_get_bits(&gb, pc->buffer + t->index, 8*MAX_HEADER_SIZE);
+                init_get_bits(&gb, pc->buffer + t->index, 8*(pc->index - t->index));
                 if (!ff_tak_decode_frame_header(avctx, &gb, t->pc.frame_start_found ? &ti :&t->ti, 127) &&
                     !ff_tak_check_crc(pc->buffer + t->index, get_bits_count(&gb) / 8)) {
                     if (!t->pc.frame_start_found) {
