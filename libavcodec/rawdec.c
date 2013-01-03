@@ -193,6 +193,9 @@ static int raw_decode(AVCodecContext *avctx, void *data, int *got_frame,
 
     if ((res = av_image_check_size(avctx->width, avctx->height, 0, avctx)) < 0)
         return res;
+    if (buf_size < context->length - (avctx->pix_fmt == AV_PIX_FMT_PAL8 ?
+                                      AVPALETTE_SIZE : 0))
+        return AVERROR_INVALIDDATA;
 
     //2bpp and 4bpp raw in avi and mov (yes this is ugly ...)
     if (context->buffer) {
