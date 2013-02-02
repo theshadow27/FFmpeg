@@ -23,6 +23,7 @@
 
 #include "libavcodec/avcodec.h"
 #include "libavcodec/dsputil.h"
+#include "libavcodec/bit_depth_template.c" // for BYTE_VEC32
 #include "dsputil_sh4.h"
 
 

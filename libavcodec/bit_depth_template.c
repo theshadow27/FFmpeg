@@ -43,6 +43,37 @@
 #   undef PIXEL_SPLAT_X4
 #else
 #   define AVCODEC_H264_HIGH_DEPTH_H
+
+#define         BYTE_VEC32(c)   ((c)*0x01010101UL)
+#define         BYTE_VEC64(c)   ((c)*0x0001000100010001UL)
+
+static inline uint32_t rnd_avg32(uint32_t a, uint32_t b)
+{
+  return (a | b) - (((a ^ b) & ~BYTE_VEC32(0x01)) >> 1);
+}
+
+static inline uint32_t no_rnd_avg32(uint32_t a, uint32_t b)
+{
+  return (a & b) + (((a ^ b) & ~BYTE_VEC32(0x01)) >> 1);
+}
+
+static inline uint64_t rnd_avg64(uint64_t a, uint64_t b)
+{
+  return (a | b) - (((a ^ b) & ~BYTE_VEC64(0x01)) >> 1);
+}
+
+static inline uint64_t no_rnd_avg64(uint64_t a, uint64_t b)
+{
+  return (a & b) + (((a ^ b) & ~BYTE_VEC64(0x01)) >> 1);
+}
+
+#define CALL_2X_PIXELS(a, b, n)\
+static void a(uint8_t *block, const uint8_t *pixels, int line_size, int h)\
+{\
+    b(block  , pixels  , line_size, h);\
+    b(block+n, pixels+n, line_size, h);\
+}
+
 #endif
 
 #if BIT_DEPTH > 8

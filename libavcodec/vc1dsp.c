@@ -28,7 +28,7 @@
 #include "vc1dsp.h"
 #include "libavutil/avassert.h"
 #include "libavutil/common.h"
-
+#include "libavcodec/bit_depth_template.c" // for rnd_avg32()
 
 /** Apply overlap transform to horizontal edge
 */

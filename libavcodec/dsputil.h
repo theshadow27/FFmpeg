@@ -149,12 +149,6 @@ DEF_OLD_QPEL(qpel8_mc32_old_c)
 DEF_OLD_QPEL(qpel8_mc13_old_c)
 DEF_OLD_QPEL(qpel8_mc33_old_c)
 
-#define CALL_2X_PIXELS(a, b, n)\
-static void a(uint8_t *block, const uint8_t *pixels, int line_size, int h){\
-    b(block  , pixels  , line_size, h);\
-    b(block+n, pixels+n, line_size, h);\
-}
-
 /* motion estimation */
 // h is limited to {width/2, width, 2*width} but never larger than 16 and never smaller than 2
 // although currently h<4 is not used as functions with width <8 are neither used nor implemented
@@ -448,29 +442,6 @@ int ff_check_alignment(void);
 void ff_block_permute(int16_t *block, uint8_t *permutation, const uint8_t *scantable, int last);
 
 void ff_set_cmp(DSPContext* c, me_cmp_func *cmp, int type);
-
-#define         BYTE_VEC32(c)   ((c)*0x01010101UL)
-#define         BYTE_VEC64(c)   ((c)*0x0001000100010001UL)
-
-static inline uint32_t rnd_avg32(uint32_t a, uint32_t b)
-{
-    return (a | b) - (((a ^ b) & ~BYTE_VEC32(0x01)) >> 1);
-}
-
-static inline uint32_t no_rnd_avg32(uint32_t a, uint32_t b)
-{
-    return (a & b) + (((a ^ b) & ~BYTE_VEC32(0x01)) >> 1);
-}
-
-static inline uint64_t rnd_avg64(uint64_t a, uint64_t b)
-{
-    return (a | b) - (((a ^ b) & ~BYTE_VEC64(0x01)) >> 1);
-}
-
-static inline uint64_t no_rnd_avg64(uint64_t a, uint64_t b)
-{
-    return (a & b) + (((a ^ b) & ~BYTE_VEC64(0x01)) >> 1);
-}
 
 static inline int get_penalty_factor(int lambda, int lambda2, int type){
     switch(type&0xFF){

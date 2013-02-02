@@ -21,6 +21,7 @@
 
 #include "libavutil/arm/cpu.h"
 #include "libavcodec/dsputil.h"
+#include "libavcodec/bit_depth_template.c" // for CALL_2X_PIXELS
 #include "dsputil_arm.h"
 
 void ff_j_rev_dct_arm(int16_t *data);

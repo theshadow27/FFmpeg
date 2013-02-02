@@ -29,6 +29,7 @@
 #include "avcodec.h"
 #include "dsputil.h"
 #include "vp3dsp.h"
+#include "bit_depth_template.c" // for no_rnd_avg32()
 
 #define IdctAdjustBeforeShift 8
 #define xC1S7 64277
