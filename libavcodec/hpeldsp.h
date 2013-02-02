@@ -90,6 +90,8 @@ typedef struct HpelDSPContext {
 
 void ff_hpeldsp_init(HpelDSPContext* p, int flags);
 
+// FIXME probably move the below stuff (copies from dsputil) out of here
+// and into bit_depth_template.c?
 #define CALL_2X_PIXELS(a, b, n)\
 static void a(uint8_t *block, const uint8_t *pixels, int line_size, int h)\
 {\
