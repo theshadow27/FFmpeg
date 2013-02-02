@@ -46,12 +46,6 @@ static inline void FUNC(OPNAME ## _no_rnd_pixels8_l2)(uint8_t *dst, const uint8_
     }\
 }\
 \
-static inline void FUNC(OPNAME ## _no_rnd_pixels16_l2)(uint8_t *dst, const uint8_t *src1, const uint8_t *src2, int dst_stride, \
-                                                int src_stride1, int src_stride2, int h){\
-    FUNC(OPNAME ## _no_rnd_pixels8_l2)(dst  , src1  , src2  , dst_stride, src_stride1, src_stride2, h);\
-    FUNC(OPNAME ## _no_rnd_pixels8_l2)(dst+8*sizeof(pixel), src1+8*sizeof(pixel), src2+8*sizeof(pixel), dst_stride, src_stride1, src_stride2, h);\
-}\
-\
 static inline void FUNCC(OPNAME ## _no_rnd_pixels8_x2)(uint8_t *block, const uint8_t *pixels, int line_size, int h){\
     FUNC(OPNAME ## _no_rnd_pixels8_l2)(block, pixels, pixels+sizeof(pixel), line_size, line_size, line_size, h);\
 }\
@@ -68,43 +62,6 @@ static inline void FUNCC(OPNAME ## _pixels8_y2)(uint8_t *block, const uint8_t *p
     FUNC(OPNAME ## _pixels8_l2)(block, pixels, pixels+line_size, line_size, line_size, line_size, h);\
 }\
 \
-static inline void FUNC(OPNAME ## _pixels8_l4)(uint8_t *dst, const uint8_t *src1, const uint8_t *src2, const uint8_t *src3, const uint8_t *src4,\
-                 int dst_stride, int src_stride1, int src_stride2,int src_stride3,int src_stride4, int h){\
-    /* FIXME HIGH BIT DEPTH */\
-    int i;\
-    for(i=0; i<h; i++){\
-        uint32_t a, b, c, d, l0, l1, h0, h1;\
-        a= AV_RN32(&src1[i*src_stride1]);\
-        b= AV_RN32(&src2[i*src_stride2]);\
-        c= AV_RN32(&src3[i*src_stride3]);\
-        d= AV_RN32(&src4[i*src_stride4]);\
-        l0=  (a&0x03030303UL)\
-           + (b&0x03030303UL)\
-           + 0x02020202UL;\
-        h0= ((a&0xFCFCFCFCUL)>>2)\
-          + ((b&0xFCFCFCFCUL)>>2);\
-        l1=  (c&0x03030303UL)\
-           + (d&0x03030303UL);\
-        h1= ((c&0xFCFCFCFCUL)>>2)\
-          + ((d&0xFCFCFCFCUL)>>2);\
-        OP(*((uint32_t*)&dst[i*dst_stride]), h0+h1+(((l0+l1)>>2)&0x0F0F0F0FUL));\
-        a= AV_RN32(&src1[i*src_stride1+4]);\
-        b= AV_RN32(&src2[i*src_stride2+4]);\
-        c= AV_RN32(&src3[i*src_stride3+4]);\
-        d= AV_RN32(&src4[i*src_stride4+4]);\
-        l0=  (a&0x03030303UL)\
-           + (b&0x03030303UL)\
-           + 0x02020202UL;\
-        h0= ((a&0xFCFCFCFCUL)>>2)\
-          + ((b&0xFCFCFCFCUL)>>2);\
-        l1=  (c&0x03030303UL)\
-           + (d&0x03030303UL);\
-        h1= ((c&0xFCFCFCFCUL)>>2)\
-          + ((d&0xFCFCFCFCUL)>>2);\
-        OP(*((uint32_t*)&dst[i*dst_stride+4]), h0+h1+(((l0+l1)>>2)&0x0F0F0F0FUL));\
-    }\
-}\
-\
 static inline void FUNCC(OPNAME ## _pixels4_x2)(uint8_t *block, const uint8_t *pixels, int line_size, int h){\
     FUNC(OPNAME ## _pixels4_l2)(block, pixels, pixels+sizeof(pixel), line_size, line_size, line_size, h);\
 }\
@@ -119,53 +76,6 @@ static inline void FUNCC(OPNAME ## _pixels2_x2)(uint8_t *block, const uint8_t *p
 \
 static inline void FUNCC(OPNAME ## _pixels2_y2)(uint8_t *block, const uint8_t *pixels, int line_size, int h){\
     FUNC(OPNAME ## _pixels2_l2)(block, pixels, pixels+line_size, line_size, line_size, line_size, h);\
-}\
-\
-static inline void FUNC(OPNAME ## _no_rnd_pixels8_l4)(uint8_t *dst, const uint8_t *src1, const uint8_t *src2, const uint8_t *src3, const uint8_t *src4,\
-                 int dst_stride, int src_stride1, int src_stride2,int src_stride3,int src_stride4, int h){\
-    /* FIXME HIGH BIT DEPTH*/\
-    int i;\
-    for(i=0; i<h; i++){\
-        uint32_t a, b, c, d, l0, l1, h0, h1;\
-        a= AV_RN32(&src1[i*src_stride1]);\
-        b= AV_RN32(&src2[i*src_stride2]);\
-        c= AV_RN32(&src3[i*src_stride3]);\
-        d= AV_RN32(&src4[i*src_stride4]);\
-        l0=  (a&0x03030303UL)\
-           + (b&0x03030303UL)\
-           + 0x01010101UL;\
-        h0= ((a&0xFCFCFCFCUL)>>2)\
-          + ((b&0xFCFCFCFCUL)>>2);\
-        l1=  (c&0x03030303UL)\
-           + (d&0x03030303UL);\
-        h1= ((c&0xFCFCFCFCUL)>>2)\
-          + ((d&0xFCFCFCFCUL)>>2);\
-        OP(*((uint32_t*)&dst[i*dst_stride]), h0+h1+(((l0+l1)>>2)&0x0F0F0F0FUL));\
-        a= AV_RN32(&src1[i*src_stride1+4]);\
-        b= AV_RN32(&src2[i*src_stride2+4]);\
-        c= AV_RN32(&src3[i*src_stride3+4]);\
-        d= AV_RN32(&src4[i*src_stride4+4]);\
-        l0=  (a&0x03030303UL)\
-           + (b&0x03030303UL)\
-           + 0x01010101UL;\
-        h0= ((a&0xFCFCFCFCUL)>>2)\
-          + ((b&0xFCFCFCFCUL)>>2);\
-        l1=  (c&0x03030303UL)\
-           + (d&0x03030303UL);\
-        h1= ((c&0xFCFCFCFCUL)>>2)\
-          + ((d&0xFCFCFCFCUL)>>2);\
-        OP(*((uint32_t*)&dst[i*dst_stride+4]), h0+h1+(((l0+l1)>>2)&0x0F0F0F0FUL));\
-    }\
-}\
-static inline void FUNC(OPNAME ## _pixels16_l4)(uint8_t *dst, const uint8_t *src1, const uint8_t *src2, const uint8_t *src3, const uint8_t *src4,\
-                 int dst_stride, int src_stride1, int src_stride2,int src_stride3,int src_stride4, int h){\
-    FUNC(OPNAME ## _pixels8_l4)(dst  , src1  , src2  , src3  , src4  , dst_stride, src_stride1, src_stride2, src_stride3, src_stride4, h);\
-    FUNC(OPNAME ## _pixels8_l4)(dst+8*sizeof(pixel), src1+8*sizeof(pixel), src2+8*sizeof(pixel), src3+8*sizeof(pixel), src4+8*sizeof(pixel), dst_stride, src_stride1, src_stride2, src_stride3, src_stride4, h);\
-}\
-static inline void FUNC(OPNAME ## _no_rnd_pixels16_l4)(uint8_t *dst, const uint8_t *src1, const uint8_t *src2, const uint8_t *src3, const uint8_t *src4,\
-                 int dst_stride, int src_stride1, int src_stride2,int src_stride3,int src_stride4, int h){\
-    FUNC(OPNAME ## _no_rnd_pixels8_l4)(dst  , src1  , src2  , src3  , src4  , dst_stride, src_stride1, src_stride2, src_stride3, src_stride4, h);\
-    FUNC(OPNAME ## _no_rnd_pixels8_l4)(dst+8*sizeof(pixel), src1+8*sizeof(pixel), src2+8*sizeof(pixel), src3+8*sizeof(pixel), src4+8*sizeof(pixel), dst_stride, src_stride1, src_stride2, src_stride3, src_stride4, h);\
 }\
 \
 static inline void FUNCC(OPNAME ## _pixels2_xy2)(uint8_t *p_block, const uint8_t *p_pixels, int line_size, int h)\
