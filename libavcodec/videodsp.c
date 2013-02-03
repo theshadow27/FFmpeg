@@ -20,6 +20,7 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/common.h"
+#include "dsputil.h" // for ff_emulated_edge_mc_8/16 prototypes
 #include "videodsp.h"
 
 #define BIT_DEPTH 8
