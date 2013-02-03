@@ -28,7 +28,8 @@
 #ifndef AVCODEC_VC1DSP_H
 #define AVCODEC_VC1DSP_H
 
-#include "dsputil.h"
+#include "dsputil.h" // for h264_chroma_mc_func
+#include "hpeldsp.h" // for op_pixels_func
 
 typedef struct VC1DSPContext {
     /* vc1 functions */
