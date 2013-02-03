@@ -30,12 +30,10 @@
 
 #include <stdint.h>
 
-#ifndef AVCODEC_DSPUTIL_H // FIXME remove once op_pixels_func is removed from dsputil
 /* add and put pixel (decoding) */
 // blocksizes for op_pixels_func are 8x4,8x8 16x8 16x16
 //h for op_pixels_func is limited to {width/2, width} but never larger than 16 and never smaller than 4
 typedef void (*op_pixels_func)(uint8_t *block/*align width (8 or 16)*/, const uint8_t *pixels/*align 1*/, int line_size, int h);
-#endif
 
 /**
  * Half-pel DSP context.
