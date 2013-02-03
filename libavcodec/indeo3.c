@@ -32,9 +32,10 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
 #include "avcodec.h"
-#include "dsputil.h"
 #include "bytestream.h"
+#include "dsputil.h" // for copy_block4()
 #include "get_bits.h"
+#include "hpeldsp.h"
 #include "internal.h"
 
 #include "indeo3data.h"
@@ -82,7 +83,7 @@ typedef struct Cell {
 typedef struct Indeo3DecodeContext {
     AVCodecContext *avctx;
     AVFrame         frame;
-    DSPContext      dsp;
+    HpelDSPContext  hdsp;
 
     GetBitContext   gb;
     int             need_resync;
@@ -248,12 +249,12 @@ static void copy_cell(Indeo3DecodeContext *ctx, Plane *plane, Cell *cell)
         /* copy using 16xH blocks */
         if (!((cell->xpos << 2) & 15) && w >= 4) {
             for (; w >= 4; src += 16, dst += 16, w -= 4)
-                ctx->dsp.put_no_rnd_pixels_tab[0][0](dst, src, plane->pitch, h);
+                ctx->hdsp.put_no_rnd_pixels_tab[0][0](dst, src, plane->pitch, h);
         }
 
         /* copy using 8xH blocks */
         if (!((cell->xpos << 2) & 7) && w >= 2) {
-            ctx->dsp.put_no_rnd_pixels_tab[1][0](dst, src, plane->pitch, h);
+            ctx->hdsp.put_no_rnd_pixels_tab[1][0](dst, src, plane->pitch, h);
             w -= 2;
             src += 8;
             dst += 8;
@@ -1048,7 +1049,7 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
     build_requant_tab();
 
-    ff_dsputil_init(&ctx->dsp, avctx);
+    ff_hpeldsp_init(&ctx->hdsp, avctx->flags);
 
     return allocate_frame_buffers(ctx, avctx, avctx->width, avctx->height);
 }
