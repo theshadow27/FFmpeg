@@ -2863,24 +2863,6 @@ av_cold void ff_dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->shrink[2]= ff_shrink44;
     c->shrink[3]= ff_shrink88;
 
-#define hpel_funcs(prefix, idx, num) \
-    c->prefix ## _pixels_tab idx [0] = prefix ## _pixels ## num ## _8_c; \
-    c->prefix ## _pixels_tab idx [1] = prefix ## _pixels ## num ## _x2_8_c; \
-    c->prefix ## _pixels_tab idx [2] = prefix ## _pixels ## num ## _y2_8_c; \
-    c->prefix ## _pixels_tab idx [3] = prefix ## _pixels ## num ## _xy2_8_c
-
-    hpel_funcs(put, [0], 16);
-    hpel_funcs(put, [1],  8);
-    hpel_funcs(put, [2],  4);
-    hpel_funcs(put, [3],  2);
-    hpel_funcs(put_no_rnd, [0], 16);
-    hpel_funcs(put_no_rnd, [1],  8);
-    hpel_funcs(avg, [0], 16);
-    hpel_funcs(avg, [1],  8);
-    hpel_funcs(avg, [2],  4);
-    hpel_funcs(avg, [3],  2);
-    hpel_funcs(avg_no_rnd,, 16);
-
 #undef FUNC
 #undef FUNCC
 #define FUNC(f, depth) f ## _ ## depth
