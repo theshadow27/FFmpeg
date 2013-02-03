@@ -40,7 +40,7 @@
 
 #include "avcodec.h"
 #include "bytestream.h"
-#include "dsputil.h"
+#include "hpeldsp.h"
 #define BITSTREAM_READER_LE
 #include "get_bits.h"
 #include "internal.h"
@@ -50,7 +50,7 @@
 typedef struct IpvideoContext {
 
     AVCodecContext *avctx;
-    DSPContext dsp;
+    HpelDSPContext hdsp;
     AVFrame second_last_frame;
     AVFrame last_frame;
     AVFrame current_frame;
@@ -84,7 +84,7 @@ static int copy_from(IpvideoContext *s, AVFrame *src, int delta_x, int delta_y)
         av_log(s->avctx, AV_LOG_ERROR, "Invalid decode type, corrupted header?\n");
         return AVERROR(EINVAL);
     }
-    s->dsp.put_pixels_tab[!s->is_16bpp][0](s->pixel_ptr, src->data[0] + motion_offset,
+    s->hdsp.put_pixels_tab[!s->is_16bpp][0](s->pixel_ptr, src->data[0] + motion_offset,
                                            s->current_frame.linesize[0], 8);
     return 0;
 }
@@ -940,7 +940,7 @@ static av_cold int ipvideo_decode_init(AVCodecContext *avctx)
     s->is_16bpp = avctx->bits_per_coded_sample == 16;
     avctx->pix_fmt = s->is_16bpp ? AV_PIX_FMT_RGB555 : AV_PIX_FMT_PAL8;
 
-    ff_dsputil_init(&s->dsp, avctx);
+    ff_hpeldsp_init(&s->hdsp, avctx->flags);
 
     avcodec_get_frame_defaults(&s->second_last_frame);
     avcodec_get_frame_defaults(&s->last_frame);
