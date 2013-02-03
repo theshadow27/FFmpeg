@@ -9,6 +9,7 @@ OBJS-$(CONFIG_GPL)                     += x86/idct_mmx.o
 OBJS-$(CONFIG_H264DSP)                 += x86/h264dsp_init.o
 OBJS-$(CONFIG_H264PRED)                += x86/h264_intrapred_init.o
 OBJS-$(CONFIG_H264QPEL)                += x86/h264_qpel.o
+OBJS-$(CONFIG_HPELDSP)                 += x86/hpeldsp_init.o
 OBJS-$(CONFIG_LPC)                     += x86/lpc.o
 OBJS-$(CONFIG_MLP_DECODER)             += x86/mlpdsp.o
 OBJS-$(CONFIG_MPEGAUDIODSP)            += x86/mpegaudiodec.o
@@ -63,6 +64,7 @@ YASM-OBJS-$(CONFIG_H264PRED)           += x86/h264_intrapred.o          \
                                           x86/h264_intrapred_10bit.o
 YASM-OBJS-$(CONFIG_H264QPEL)           += x86/h264_qpel_8bit.o          \
                                           x86/h264_qpel_10bit.o
+YASM-OBJS-$(CONFIG_HPELDSP)            += x86/hpeldsp.o
 YASM-OBJS-$(CONFIG_MPEGAUDIODSP)       += x86/imdct36.o
 YASM-OBJS-$(CONFIG_PNG_DECODER)        += x86/pngdsp.o
 YASM-OBJS-$(CONFIG_PRORES_DECODER)     += x86/proresdsp.o
@@ -81,5 +83,4 @@ YASM-OBJS-$(CONFIG_VP8_DECODER)        += x86/vp8dsp.o
 YASM-OBJS                              += x86/dsputil.o                 \
                                           x86/deinterlace.o             \
                                           x86/fmtconvert.o              \
-                                          x86/hpeldsp.o                 \
                                           x86/mpeg4qpel.o               \
