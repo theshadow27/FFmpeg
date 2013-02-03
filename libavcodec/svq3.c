@@ -307,8 +307,8 @@ static inline void svq3_mc_dir_part(MpegEncContext *s,
              : s->dsp.put_tpel_pixels_tab)[dxy](dest, src, s->linesize,
                                                 width, height);
     else
-        (avg ? s->dsp.avg_pixels_tab
-             : s->dsp.put_pixels_tab)[blocksize][dxy](dest, src, s->linesize,
+        (avg ? s->hdsp.avg_pixels_tab
+             : s->hdsp.put_pixels_tab)[blocksize][dxy](dest, src, s->linesize,
                                                       height);
 
     if (!(s->flags & CODEC_FLAG_GRAY)) {
@@ -335,8 +335,8 @@ static inline void svq3_mc_dir_part(MpegEncContext *s,
                                                         s->uvlinesize,
                                                         width, height);
             else
-                (avg ? s->dsp.avg_pixels_tab
-                     : s->dsp.put_pixels_tab)[blocksize][dxy](dest, src,
+                (avg ? s->hdsp.avg_pixels_tab
+                     : s->hdsp.put_pixels_tab)[blocksize][dxy](dest, src,
                                                               s->uvlinesize,
                                                               height);
         }

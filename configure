@@ -1631,7 +1631,7 @@ mdct_select="fft"
 rdft_select="fft"
 mpegaudio_select="mpegaudiodsp"
 mpegaudiodsp_select="dct"
-mpegvideo_select="videodsp"
+mpegvideo_select="hpeldsp videodsp"
 mpegvideoenc_select="mpegvideo"
 
 # decoders / encoders
