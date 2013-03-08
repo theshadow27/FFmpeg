@@ -164,10 +164,12 @@ void avfilter_unref_buffer(AVFilterBufferRef *ref)
         return;
     av_assert0(ref->buf->refcount > 0);
     if (!(--ref->buf->refcount)) {
+#if 0 //POOL
         if (!ref->buf->free) {
             store_in_pool(ref);
             return;
         }
+#endif
         ref->buf->free(ref->buf);
     }
     if (ref->extended_data != ref->data)

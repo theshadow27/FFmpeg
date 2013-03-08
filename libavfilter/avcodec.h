@@ -37,6 +37,7 @@
  *
  * @return 0 on success, a negative number on error.
  */
+attribute_deprecated
 int avfilter_copy_frame_props(AVFilterBufferRef *dst, const AVFrame *src);
 
 /**
@@ -45,6 +46,7 @@ int avfilter_copy_frame_props(AVFilterBufferRef *dst, const AVFrame *src);
  *
  * @return 0 on success, a negative number on error.
  */
+attribute_deprecated
 int avfilter_copy_buf_props(AVFrame *dst, const AVFilterBufferRef *src);
 
 /**

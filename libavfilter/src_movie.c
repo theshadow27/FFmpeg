@@ -64,9 +64,16 @@ typedef struct {
     AVPacket pkt, pkt0;
     AVFrame *frame;   ///< video frame to store the decoded images in
 
+<<<<<<< HEAD:libavfilter/src_movie.c
     int max_stream_index; /**< max stream # actually used for output */
     MovieStream *st; /**< array of all streams, one per output */
     int *out_index; /**< stream number -> output number map, or -1 */
+||||||| merged common ancestors
+    int w, h;
+    AVFilterBufferRef *picref;
+=======
+    int w, h;
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911:libavfilter/vsrc_movie.c
 } MovieContext;
 
 #define OFFSET(x) offsetof(MovieContext, x)
@@ -294,6 +301,7 @@ static av_cold int movie_common_init(AVFilterContext *ctx, const char *args, con
     for (i = 0; i < nb_streams; i++)
         movie->out_index[movie->st[i].st->index] = i;
 
+<<<<<<< HEAD:libavfilter/src_movie.c
     for (i = 0; i < nb_streams; i++) {
         AVFilterPad pad = { 0 };
         snprintf(name, sizeof(name), "out%d", i);
@@ -311,11 +319,17 @@ static av_cold int movie_common_init(AVFilterContext *ctx, const char *args, con
             if (ret < 0)
                 return ret;
         }
-    }
+||||||| merged common ancestors
+    if ((ret = avcodec_open2(movie->codec_ctx, codec, NULL)) < 0) {
+        av_log(ctx, AV_LOG_ERROR, "Failed to open codec\n");
+        return ret;
+=======
+    movie->codec_ctx->refcounted_frames = 1;
 
-    if (!(movie->frame = avcodec_alloc_frame()) ) {
-        av_log(log, AV_LOG_ERROR, "Failed to alloc frame\n");
-        return AVERROR(ENOMEM);
+    if ((ret = avcodec_open2(movie->codec_ctx, codec, NULL)) < 0) {
+        av_log(ctx, AV_LOG_ERROR, "Failed to open codec\n");
+        return ret;
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911:libavfilter/vsrc_movie.c
     }
 
     av_log(ctx, AV_LOG_VERBOSE, "seek_point:%"PRIi64" format_name:%s file_name:%s stream_index:%d\n",
@@ -342,11 +356,19 @@ static av_cold void movie_uninit(AVFilterContext *ctx)
     avcodec_free_frame(&movie->frame);
     if (movie->format_ctx)
         avformat_close_input(&movie->format_ctx);
+<<<<<<< HEAD:libavfilter/src_movie.c
+||||||| merged common ancestors
+    avfilter_unref_buffer(movie->picref);
+    avcodec_free_frame(&movie->frame);
+=======
+    av_frame_free(&movie->frame);
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911:libavfilter/vsrc_movie.c
 }
 
 static int movie_query_formats(AVFilterContext *ctx)
 {
     MovieContext *movie = ctx->priv;
+<<<<<<< HEAD:libavfilter/src_movie.c
     int list[] = { 0, -1 };
     int64_t list64[] = { 0, -1 };
     int i;
@@ -370,6 +392,121 @@ static int movie_query_formats(AVFilterContext *ctx)
             ff_channel_layouts_ref(avfilter_make_format64_list(list64),
                                    &outlink->in_channel_layouts);
             break;
+||||||| merged common ancestors
+    enum AVPixelFormat pix_fmts[] = { movie->codec_ctx->pix_fmt, AV_PIX_FMT_NONE };
+
+    ff_set_common_formats(ctx, ff_make_format_list(pix_fmts));
+    return 0;
+}
+
+static int config_output_props(AVFilterLink *outlink)
+{
+    MovieContext *movie = outlink->src->priv;
+
+    outlink->w = movie->w;
+    outlink->h = movie->h;
+    outlink->time_base = movie->format_ctx->streams[movie->stream_index]->time_base;
+
+    return 0;
+}
+
+static int movie_get_frame(AVFilterLink *outlink)
+{
+    MovieContext *movie = outlink->src->priv;
+    AVPacket pkt;
+    int ret, frame_decoded;
+    AVStream *st = movie->format_ctx->streams[movie->stream_index];
+
+    if (movie->is_done == 1)
+        return 0;
+
+    while ((ret = av_read_frame(movie->format_ctx, &pkt)) >= 0) {
+        // Is this a packet from the video stream?
+        if (pkt.stream_index == movie->stream_index) {
+            movie->codec_ctx->reordered_opaque = pkt.pos;
+            avcodec_decode_video2(movie->codec_ctx, movie->frame, &frame_decoded, &pkt);
+
+            if (frame_decoded) {
+                /* FIXME: avoid the memcpy */
+                movie->picref = ff_get_video_buffer(outlink, AV_PERM_WRITE | AV_PERM_PRESERVE |
+                                                    AV_PERM_REUSE2, outlink->w, outlink->h);
+                av_image_copy(movie->picref->data, movie->picref->linesize,
+                              movie->frame->data,  movie->frame->linesize,
+                              movie->picref->format, outlink->w, outlink->h);
+                avfilter_copy_frame_props(movie->picref, movie->frame);
+
+                /* FIXME: use a PTS correction mechanism as that in
+                 * ffplay.c when some API will be available for that */
+                /* use pkt_dts if pkt_pts is not available */
+                movie->picref->pts = movie->frame->pkt_pts == AV_NOPTS_VALUE ?
+                    movie->frame->pkt_dts : movie->frame->pkt_pts;
+
+                movie->picref->pos                    = movie->frame->reordered_opaque;
+                if (!movie->frame->sample_aspect_ratio.num)
+                    movie->picref->video->pixel_aspect = st->sample_aspect_ratio;
+                av_dlog(outlink->src,
+                        "movie_get_frame(): file:'%s' pts:%"PRId64" time:%f pos:%"PRId64" aspect:%d/%d\n",
+                        movie->file_name, movie->picref->pts,
+                        (double)movie->picref->pts * av_q2d(st->time_base),
+                        movie->picref->pos,
+                        movie->picref->video->pixel_aspect.num, movie->picref->video->pixel_aspect.den);
+                // We got it. Free the packet since we are returning
+                av_free_packet(&pkt);
+
+                return 0;
+            }
+=======
+    enum AVPixelFormat pix_fmts[] = { movie->codec_ctx->pix_fmt, AV_PIX_FMT_NONE };
+
+    ff_set_common_formats(ctx, ff_make_format_list(pix_fmts));
+    return 0;
+}
+
+static int config_output_props(AVFilterLink *outlink)
+{
+    MovieContext *movie = outlink->src->priv;
+
+    outlink->w = movie->w;
+    outlink->h = movie->h;
+    outlink->time_base = movie->format_ctx->streams[movie->stream_index]->time_base;
+
+    return 0;
+}
+
+static int movie_get_frame(AVFilterLink *outlink)
+{
+    MovieContext *movie = outlink->src->priv;
+    AVPacket pkt;
+    int ret, frame_decoded;
+    AVStream av_unused *st = movie->format_ctx->streams[movie->stream_index];
+
+    if (movie->is_done == 1)
+        return 0;
+
+    movie->frame = av_frame_alloc();
+    if (!movie->frame)
+        return AVERROR(ENOMEM);
+
+    while ((ret = av_read_frame(movie->format_ctx, &pkt)) >= 0) {
+        // Is this a packet from the video stream?
+        if (pkt.stream_index == movie->stream_index) {
+            avcodec_decode_video2(movie->codec_ctx, movie->frame, &frame_decoded, &pkt);
+
+            if (frame_decoded) {
+                if (movie->frame->pkt_pts != AV_NOPTS_VALUE)
+                    movie->frame->pts = movie->frame->pkt_pts;
+                av_dlog(outlink->src,
+                        "movie_get_frame(): file:'%s' pts:%"PRId64" time:%f aspect:%d/%d\n",
+                        movie->file_name, movie->frame->pts,
+                        (double)movie->frame->pts * av_q2d(st->time_base),
+                        movie->frame->sample_aspect_ratio.num,
+                        movie->frame->sample_aspect_ratio.den);
+                // We got it. Free the packet since we are returning
+                av_free_packet(&pkt);
+
+                return 0;
+            }
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911:libavfilter/vsrc_movie.c
         }
     }
 
@@ -463,6 +600,7 @@ static int rewind_file(AVFilterContext *ctx)
         return ret;
     }
 
+<<<<<<< HEAD:libavfilter/src_movie.c
     for (i = 0; i < ctx->nb_outputs; i++) {
         avcodec_flush_buffers(movie->st[i].st->codec);
         movie->st[i].done = 0;
@@ -597,6 +735,13 @@ static int movie_request_frame(AVFilterLink *outlink)
 #if CONFIG_MOVIE_FILTER
 
 AVFILTER_DEFINE_CLASS(movie);
+||||||| merged common ancestors
+    ret = ff_filter_frame(outlink, movie->picref);
+    movie->picref = NULL;
+=======
+    ret = ff_filter_frame(outlink, movie->frame);
+    movie->frame = NULL;
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911:libavfilter/vsrc_movie.c
 
 static av_cold int movie_init(AVFilterContext *ctx, const char *args)
 {

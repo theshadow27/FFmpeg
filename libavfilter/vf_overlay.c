@@ -94,7 +94,19 @@ typedef struct {
     int hsub, vsub;             ///< chroma subsampling values
     int shortest;               ///< terminate stream when the shortest input terminates
 
+<<<<<<< HEAD
     char *x_expr, *y_expr;
+||||||| merged common ancestors
+    char x_expr[256], y_expr[256];
+
+    AVFilterBufferRef *main;
+    AVFilterBufferRef *over_prev, *over_next;
+=======
+    char x_expr[256], y_expr[256];
+
+    AVFrame *main;
+    AVFrame *over_prev, *over_next;
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
 } OverlayContext;
 
 #define OFFSET(x) offsetof(OverlayContext, x)
@@ -141,11 +153,21 @@ static av_cold void uninit(AVFilterContext *ctx)
 {
     OverlayContext *over = ctx->priv;
 
+<<<<<<< HEAD
     av_opt_free(over);
 
     avfilter_unref_bufferp(&over->overpicref);
     ff_bufqueue_discard_all(&over->queue_main);
     ff_bufqueue_discard_all(&over->queue_over);
+||||||| merged common ancestors
+    avfilter_unref_bufferp(&s->main);
+    avfilter_unref_bufferp(&s->over_prev);
+    avfilter_unref_bufferp(&s->over_next);
+=======
+    av_frame_free(&s->main);
+    av_frame_free(&s->over_prev);
+    av_frame_free(&s->over_next);
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
 }
 
 static int query_formats(AVFilterContext *ctx)
@@ -302,6 +324,7 @@ static int config_output(AVFilterLink *outlink)
     return 0;
 }
 
+<<<<<<< HEAD
 // divide by 255 and round to nearest
 // apply a fast variant: (X+127)/255 = ((X+127)*257+257)>>16 = ((X+128)*257)>>16
 #define FAST_DIV255(x) ((((x) + 128) * 257) >> 16)
@@ -317,18 +340,49 @@ static int config_output(AVFilterLink *outlink)
  */
 static void blend_image(AVFilterContext *ctx,
                         AVFilterBufferRef *dst, AVFilterBufferRef *src,
+||||||| merged common ancestors
+static void blend_frame(AVFilterContext *ctx,
+                        AVFilterBufferRef *dst, AVFilterBufferRef *src,
+=======
+static void blend_frame(AVFilterContext *ctx,
+                        AVFrame *dst, AVFrame *src,
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
                         int x, int y)
 {
     OverlayContext *over = ctx->priv;
+<<<<<<< HEAD
     int i, imax, j, jmax, k, kmax;
     const int src_w = src->video->w;
     const int src_h = src->video->h;
     const int dst_w = dst->video->w;
     const int dst_h = dst->video->h;
+||||||| merged common ancestors
+    int i, j, k;
+    int width, height;
+    int overlay_end_y = y + src->video->h;
+    int end_y, start_y;
+=======
+    int i, j, k;
+    int width, height;
+    int overlay_end_y = y + src->height;
+    int end_y, start_y;
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
 
+<<<<<<< HEAD
     if (x >= dst_w || x+dst_w  < 0 ||
         y >= dst_h || y+dst_h < 0)
         return; /* no intersection */
+||||||| merged common ancestors
+    width = FFMIN(dst->video->w - x, src->video->w);
+    end_y = FFMIN(dst->video->h, overlay_end_y);
+    start_y = FFMAX(y, 0);
+    height = end_y - start_y;
+=======
+    width = FFMIN(dst->width - x, src->width);
+    end_y = FFMIN(dst->height, overlay_end_y);
+    start_y = FFMAX(y, 0);
+    height = end_y - start_y;
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
 
     if (over->main_is_packed_rgb) {
         uint8_t alpha;          ///< the amount of overlay to blend on to main
@@ -503,9 +557,61 @@ static void blend_image(AVFilterContext *ctx,
     }
 }
 
+<<<<<<< HEAD
 static int try_filter_frame(AVFilterContext *ctx, AVFilterBufferRef *mainpic)
+||||||| merged common ancestors
+static int filter_frame_main(AVFilterLink *inlink, AVFilterBufferRef *frame)
+=======
+static int filter_frame_main(AVFilterLink *inlink, AVFrame *frame)
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
 {
+<<<<<<< HEAD
     OverlayContext *over = ctx->priv;
+||||||| merged common ancestors
+    OverlayContext *s = inlink->dst->priv;
+
+    av_assert0(!s->main);
+    s->main         = frame;
+
+    return 0;
+}
+
+static int filter_frame_overlay(AVFilterLink *inlink, AVFilterBufferRef *frame)
+{
+    OverlayContext *s = inlink->dst->priv;
+
+    av_assert0(!s->over_next);
+    s->over_next    = frame;
+
+    return 0;
+}
+
+static int output_frame(AVFilterContext *ctx)
+{
+    OverlayContext *s = ctx->priv;
+=======
+    OverlayContext *s = inlink->dst->priv;
+
+    av_assert0(!s->main);
+    s->main         = frame;
+
+    return 0;
+}
+
+static int filter_frame_overlay(AVFilterLink *inlink, AVFrame *frame)
+{
+    OverlayContext *s = inlink->dst->priv;
+
+    av_assert0(!s->over_next);
+    s->over_next    = frame;
+
+    return 0;
+}
+
+static int output_frame(AVFilterContext *ctx)
+{
+    OverlayContext *s = ctx->priv;
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
     AVFilterLink *outlink = ctx->outputs[0];
     AVFilterBufferRef *next_overpic;
     int ret;
@@ -629,7 +735,81 @@ static int request_frame(AVFilterLink *outlink)
         if (ret < 0)
             return ret;
     }
+<<<<<<< HEAD
     return 0;
+||||||| merged common ancestors
+
+    /* get a new frame on the overlay input, on EOF
+     * reuse previous */
+    if (!s->over_next) {
+        ret = ff_request_frame(ctx->inputs[OVERLAY]);
+        if (ret == AVERROR_EOF)
+           return handle_overlay_eof(ctx);
+        else if (ret < 0)
+            return ret;
+    }
+
+    while (s->main->pts != AV_NOPTS_VALUE &&
+           s->over_next->pts != AV_NOPTS_VALUE &&
+           av_compare_ts(s->over_next->pts, tb_over, s->main->pts, tb_main) < 0) {
+        avfilter_unref_bufferp(&s->over_prev);
+        FFSWAP(AVFilterBufferRef*, s->over_prev, s->over_next);
+
+        ret = ff_request_frame(ctx->inputs[OVERLAY]);
+        if (ret == AVERROR_EOF)
+            return handle_overlay_eof(ctx);
+        else if (ret < 0)
+            return ret;
+    }
+
+    if (s->main->pts == AV_NOPTS_VALUE ||
+        s->over_next->pts == AV_NOPTS_VALUE ||
+        !av_compare_ts(s->over_next->pts, tb_over, s->main->pts, tb_main)) {
+        blend_frame(ctx, s->main, s->over_next, s->x, s->y);
+        avfilter_unref_bufferp(&s->over_prev);
+        FFSWAP(AVFilterBufferRef*, s->over_prev, s->over_next);
+    } else if (s->over_prev) {
+        blend_frame(ctx, s->main, s->over_prev, s->x, s->y);
+    }
+
+    return output_frame(ctx);
+=======
+
+    /* get a new frame on the overlay input, on EOF
+     * reuse previous */
+    if (!s->over_next) {
+        ret = ff_request_frame(ctx->inputs[OVERLAY]);
+        if (ret == AVERROR_EOF)
+           return handle_overlay_eof(ctx);
+        else if (ret < 0)
+            return ret;
+    }
+
+    while (s->main->pts != AV_NOPTS_VALUE &&
+           s->over_next->pts != AV_NOPTS_VALUE &&
+           av_compare_ts(s->over_next->pts, tb_over, s->main->pts, tb_main) < 0) {
+        av_frame_free(&s->over_prev);
+        FFSWAP(AVFrame*, s->over_prev, s->over_next);
+
+        ret = ff_request_frame(ctx->inputs[OVERLAY]);
+        if (ret == AVERROR_EOF)
+            return handle_overlay_eof(ctx);
+        else if (ret < 0)
+            return ret;
+    }
+
+    if (s->main->pts == AV_NOPTS_VALUE ||
+        s->over_next->pts == AV_NOPTS_VALUE ||
+        !av_compare_ts(s->over_next->pts, tb_over, s->main->pts, tb_main)) {
+        blend_frame(ctx, s->main, s->over_next, s->x, s->y);
+        av_frame_free(&s->over_prev);
+        FFSWAP(AVFrame*, s->over_prev, s->over_next);
+    } else if (s->over_prev) {
+        blend_frame(ctx, s->main, s->over_prev, s->x, s->y);
+    }
+
+    return output_frame(ctx);
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
 }
 
 static const AVFilterPad avfilter_vf_overlay_inputs[] = {
@@ -639,14 +819,33 @@ static const AVFilterPad avfilter_vf_overlay_inputs[] = {
         .get_video_buffer = ff_null_get_video_buffer,
         .config_props = config_input_main,
         .filter_frame = filter_frame_main,
+<<<<<<< HEAD
         .min_perms    = AV_PERM_READ | AV_PERM_WRITE | AV_PERM_PRESERVE,
+||||||| merged common ancestors
+        .min_perms    = AV_PERM_READ,
+        .rej_perms    = AV_PERM_REUSE2 | AV_PERM_PRESERVE,
+        .needs_fifo   = 1,
+=======
+        .needs_writable = 1,
+        .needs_fifo   = 1,
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
     },
     {
         .name         = "overlay",
         .type         = AVMEDIA_TYPE_VIDEO,
         .config_props = config_input_overlay,
+<<<<<<< HEAD
         .filter_frame = filter_frame_over,
         .min_perms    = AV_PERM_READ | AV_PERM_PRESERVE,
+||||||| merged common ancestors
+        .filter_frame = filter_frame_overlay,
+        .min_perms    = AV_PERM_READ,
+        .rej_perms    = AV_PERM_REUSE2,
+        .needs_fifo   = 1,
+=======
+        .filter_frame = filter_frame_overlay,
+        .needs_fifo   = 1,
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
     },
     { NULL }
 };

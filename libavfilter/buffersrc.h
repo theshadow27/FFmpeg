@@ -28,6 +28,7 @@
 #include "libavcodec/avcodec.h"
 #include "avfilter.h"
 
+<<<<<<< HEAD
 enum {
 
     /**
@@ -69,13 +70,23 @@ int av_buffersrc_add_ref(AVFilterContext *buffer_src,
 unsigned av_buffersrc_get_nb_failed_requests(AVFilterContext *buffer_src);
 
 #ifdef FF_API_BUFFERSRC_BUFFER
+||||||| merged common ancestors
+=======
+#if FF_API_AVFILTERBUFFER
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
 /**
  * Add a buffer to the filtergraph s.
  *
  * @param buf buffer containing frame data to be passed down the filtergraph.
  * This function will take ownership of buf, the user must not free it.
  * A NULL buf signals EOF -- i.e. no more frames will be sent to this filter.
+<<<<<<< HEAD
  * @deprecated Use av_buffersrc_add_ref(s, picref, AV_BUFFERSRC_FLAG_NO_COPY) instead.
+||||||| merged common ancestors
+=======
+ *
+ * @deprecated use av_buffersrc_write_frame() or av_buffersrc_add_frame()
+>>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
  */
 attribute_deprecated
 int av_buffersrc_buffer(AVFilterContext *s, AVFilterBufferRef *buf);
@@ -85,11 +96,29 @@ int av_buffersrc_buffer(AVFilterContext *s, AVFilterBufferRef *buf);
  * Add a frame to the buffer source.
  *
  * @param s an instance of the buffersrc filter.
- * @param frame frame to be added.
+ * @param frame frame to be added. If the frame is reference counted, this
+ * function will make a new reference to it. Otherwise the frame data will be
+ * copied.
  *
- * @warning frame data will be memcpy()ed, which may be a big performance
- *          hit. Use av_buffersrc_buffer() to avoid copying the data.
+ * @return 0 on success, a negative AVERROR on error
  */
 int av_buffersrc_write_frame(AVFilterContext *s, const AVFrame *frame);
+
+/**
+ * Add a frame to the buffer source.
+ *
+ * @param s an instance of the buffersrc filter.
+ * @param frame frame to be added. If the frame is reference counted, this
+ * function will take ownership of the reference(s) and reset the frame.
+ * Otherwise the frame data will be copied. If this function returns an error,
+ * the input frame is not touched.
+ *
+ * @return 0 on success, a negative AVERROR on error.
+ *
+ * @note the difference between this function and av_buffersrc_write_frame() is
+ * that av_buffersrc_write_frame() creates a new reference to the input frame,
+ * while this function takes ownership of the reference passed to it.
+ */
+int av_buffersrc_add_frame(AVFilterContext *ctx, AVFrame *frame);
 
 #endif /* AVFILTER_BUFFERSRC_H */
