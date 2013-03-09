@@ -268,7 +268,7 @@ static int filter_frame(AVFilterLink *link, AVFrame *frame)
     AVFilterContext *ctx = link->dst;
     YADIFContext *yadif = ctx->priv;
 
-    av_assert0(picref);
+    av_assert0(frame);
 
     if (yadif->frame_pending)
         return_frame(ctx, 1);
