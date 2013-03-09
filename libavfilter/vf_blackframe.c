@@ -95,7 +95,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
         p += frame->linesize[0];
     }
 
-    if (frame->video->key_frame)
+    if (frame->key_frame)
         blackframe->last_keyframe = blackframe->frame;
 
     pblack = blackframe->nblack * 100 / (inlink->w * inlink->h);
@@ -104,7 +104,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
                "type:%c last_keyframe:%d\n",
                blackframe->frame, pblack, frame->pts,
                frame->pts == AV_NOPTS_VALUE ? -1 : frame->pts * av_q2d(inlink->time_base),
-               av_get_picture_type_char(frame->video->pict_type), blackframe->last_keyframe);
+               av_get_picture_type_char(frame->pict_type), blackframe->last_keyframe);
 
     blackframe->frame++;
     blackframe->nblack = 0;
