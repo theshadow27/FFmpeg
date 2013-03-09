@@ -188,9 +188,6 @@ static int raw_decode(AVCodecContext *avctx, void *data, int *got_frame,
 
     if ((res = av_image_check_size(avctx->width, avctx->height, 0, avctx)) < 0)
         return res;
-    if (buf_size < context->frame_size - (avctx->pix_fmt == AV_PIX_FMT_PAL8 ?
-                                          AVPALETTE_SIZE : 0))
-        return AVERROR_INVALIDDATA;
 
     if (need_copy)
         frame->buf[0] = av_buffer_alloc(context->frame_size);
