@@ -119,8 +119,8 @@ static int pp_filter_frame(AVFilterLink *inlink, AVFrame *inbuf)
     pp_postprocess((const uint8_t **)inbuf->data, inbuf->linesize,
                    outbuf->data,                 outbuf->linesize,
                    aligned_w, outlink->h,
-                   NULL, /* FIXME outbuf->qp_table */
-                   0, /* FIXME outbuf->qp_table_linesize */
+                   outbuf->qscale_table,
+                   outbuf->qstride,
                    pp->modes[pp->mode_id],
                    pp->pp_ctx,
                    outbuf->pict_type);
