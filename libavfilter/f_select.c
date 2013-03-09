@@ -116,6 +116,7 @@ enum var_name {
     VAR_PREV_SELECTED_N,
 
     VAR_KEY,
+    VAR_POS,
 
     VAR_SCENE,
 
@@ -272,18 +273,18 @@ static int select_frame(AVFilterContext *ctx, AVFrame *frame)
 
     select->var_values[VAR_PTS] = TS2D(frame->pts);
     select->var_values[VAR_T  ] = TS2D(frame->pts) * av_q2d(inlink->time_base);
-    select->var_values[VAR_POS] = frame->pos == -1 ? NAN : frame->pos;
+    select->var_values[VAR_POS] = av_frame_get_pkt_pos(frame) == -1 ? NAN : av_frame_get_pkt_pos(frame);
 
     switch (inlink->type) {
     case AVMEDIA_TYPE_AUDIO:
-        select->var_values[VAR_SAMPLES_N] = frame->audio->nb_samples;
+        select->var_values[VAR_SAMPLES_N] = frame->nb_samples;
         break;
 
     case AVMEDIA_TYPE_VIDEO:
         select->var_values[VAR_INTERLACE_TYPE] =
             !frame->interlaced_frame ? INTERLACE_TYPE_P :
-        frame->video->top_field_first ? INTERLACE_TYPE_T : INTERLACE_TYPE_B;
-        select->var_values[VAR_PICT_TYPE] = frame->video->pict_type;
+        frame->top_field_first ? INTERLACE_TYPE_T : INTERLACE_TYPE_B;
+        select->var_values[VAR_PICT_TYPE] = frame->pict_type;
 #if CONFIG_AVCODEC
         if (select->do_scene_detect) {
             char buf[32];
@@ -328,7 +329,7 @@ static int select_frame(AVFilterContext *ctx, AVFrame *frame)
         select->var_values[VAR_PREV_SELECTED_T]   = select->var_values[VAR_T];
         select->var_values[VAR_SELECTED_N] += 1.0;
         if (inlink->type == AVMEDIA_TYPE_AUDIO)
-            select->var_values[VAR_CONSUMED_SAMPLES_N] += frame->audio->nb_samples;
+            select->var_values[VAR_CONSUMED_SAMPLES_N] += frame->nb_samples;
     }
 
     select->var_values[VAR_N] += 1.0;
