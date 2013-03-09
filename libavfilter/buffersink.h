@@ -95,6 +95,8 @@ void av_buffersink_set_frame_size(AVFilterContext *ctx, unsigned frame_size);
 int av_buffersink_get_buffer_ref(AVFilterContext *buffer_sink,
                                  AVFilterBufferRef **bufref, int flags);
 
+/* TODO */
+int av_buffersink_get_frame_flags(AVFilterContext *ctx, AVFrame *frame, int flags);
 
 /**
  * Get the number of immediately available frames.
