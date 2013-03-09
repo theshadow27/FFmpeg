@@ -481,10 +481,6 @@ static int movie_push_frame(AVFilterContext *ctx, unsigned out_id)
             pkt->stream_index = movie->st[out_id].st->index;
             /* packet is already ready for flushing */
         } else {
-            movie->frame = av_frame_alloc();
-            if (!movie->frame)
-                return AVERROR(ENOMEM);
-
             ret = av_read_frame(movie->format_ctx, &movie->pkt0);
             if (ret < 0) {
                 av_init_packet(&movie->pkt0); /* ready for flushing */
@@ -510,6 +506,10 @@ static int movie_push_frame(AVFilterContext *ctx, unsigned out_id)
     st = &movie->st[pkt_out_id];
     outlink = ctx->outputs[pkt_out_id];
 
+    movie->frame = av_frame_alloc();
+    if (!movie->frame)
+        return AVERROR(ENOMEM);
+
     switch (st->st->codec->codec_type) {
     case AVMEDIA_TYPE_VIDEO:
         ret = avcodec_decode_video2(st->st->codec, movie->frame, &got_frame, pkt);
@@ -523,6 +523,7 @@ static int movie_push_frame(AVFilterContext *ctx, unsigned out_id)
     }
     if (ret < 0) {
         av_log(ctx, AV_LOG_WARNING, "Decode error: %s\n", av_err2str(ret));
+        av_frame_free(&movie->frame);
         return 0;
     }
     if (!ret)
@@ -538,6 +539,7 @@ static int movie_push_frame(AVFilterContext *ctx, unsigned out_id)
     if (!got_frame) {
         if (!ret)
             st->done = 1;
+        av_frame_free(&movie->frame);
         return 0;
     }
 
