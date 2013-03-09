@@ -182,7 +182,8 @@ int av_buffersrc_add_ref(AVFilterContext *ctx, AVFilterBufferRef *buf,
     if (!frame)
         return AVERROR(ENOMEM);
 
-    dummy_buf = av_buffer_create(NULL, 0, compat_free_buffer, buf, 0);
+    dummy_buf = av_buffer_create(NULL, 0, compat_free_buffer, buf,
+                                 (buf->perms & AV_PERM_WRITE) ? 0 : AV_BUFFER_FLAG_READONLY);
     if (!dummy_buf) {
         ret = AVERROR(ENOMEM);
         goto fail;
@@ -199,7 +200,7 @@ do {                                                                    \
         goto fail;                                                      \
     }                                                                   \
     ref_out = av_buffer_create(data, data_size, compat_unref_buffer,    \
-                               dummy_ref, 0);                           \
+                               dummy_ref, (buf->perms & AV_PERM_WRITE) ? 0 : AV_BUFFER_FLAG_READONLY);                           \
     if (!ref_out) {                                                     \
         av_frame_unref(frame);                                          \
         ret = AVERROR(ENOMEM);                                          \
