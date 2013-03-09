@@ -544,6 +544,7 @@ static int movie_push_frame(AVFilterContext *ctx, unsigned out_id)
     av_dlog(ctx, "movie_push_frame(): file:'%s' %s\n", movie->file_name,
             describe_frameref(movie->frame, outlink));
 
+    movie->frame->pts = av_frame_get_best_effort_timestamp(movie->frame);
     ff_filter_frame(outlink, movie->frame); // FIXME: raise error properly
     movie->frame = NULL;
 
