@@ -100,6 +100,7 @@ int av_buffersrc_add_frame(AVFilterContext *ctx, AVFrame *frame)
     BufferSourceContext *s = ctx->priv;
     AVFrame *copy;
     int ret;
+    int64_t layout;
 
     if (!frame) {
         s->eof = 1;
@@ -115,6 +116,12 @@ int av_buffersrc_add_frame(AVFilterContext *ctx, AVFrame *frame)
     case AVMEDIA_TYPE_AUDIO:
         CHECK_AUDIO_PARAM_CHANGE(ctx, s, frame->sample_rate, frame->channel_layout,
                                  frame->format);
+
+        layout = frame->channel_layout;
+        if (layout && av_get_channel_layout_nb_channels(layout) != av_frame_get_channels(frame)) {
+            av_log(0, AV_LOG_ERROR, "Layout indicates a different number of channels than actually present\n");
+            return AVERROR(EINVAL);
+        }
         break;
     default:
         return AVERROR(EINVAL);
