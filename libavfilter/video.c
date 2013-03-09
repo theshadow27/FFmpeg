@@ -82,9 +82,9 @@ AVFrame *ff_default_get_video_buffer(AVFilterLink *link, int w, int h)
     if (ret < 0)
         av_frame_free(&frame);
 
-    memset(data[0], 128, i); FIXME i
-
 #if 0 //POOL
+    memset(data[0], 128, i);
+
     picref->buf->priv = pool;
     picref->buf->free = NULL;
     pool->refcount++;
