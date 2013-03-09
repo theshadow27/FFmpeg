@@ -84,6 +84,12 @@ int av_buffersrc_write_frame(AVFilterContext *ctx, const AVFrame *frame)
 {
     AVFrame *copy;
     int ret = 0;
+    int64_t layout = frame->channel_layout;
+
+    if (layout && av_get_channel_layout_nb_channels(layout) != av_frame_get_channels(frame)) {
+        av_log(0, AV_LOG_ERROR, "Layout indicates a different number of channels than actually present\n");
+        return AVERROR(EINVAL);
+    }
 
     if (!(copy = av_frame_alloc()))
         return AVERROR(ENOMEM);
