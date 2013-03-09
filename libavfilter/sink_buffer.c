@@ -90,7 +90,7 @@ static av_cold void common_uninit(AVFilterContext *ctx)
     if (buf->fifo) {
         while (av_fifo_size(buf->fifo) >= sizeof(AVFilterBufferRef *)) {
             av_fifo_generic_read(buf->fifo, &picref, sizeof(picref), NULL);
-            avfilter_unref_buffer(picref); /* FIXME */
+            av_frame_unref(picref);
         }
         av_fifo_free(buf->fifo);
         buf->fifo = NULL;
