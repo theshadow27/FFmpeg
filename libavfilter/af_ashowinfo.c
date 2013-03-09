@@ -91,8 +91,8 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *buf)
            s->frame,
            av_ts2str(buf->pts), av_ts2timestr(buf->pts, &inlink->time_base),
            av_frame_get_pkt_pos(buf),
-           av_get_sample_fmt_name(buf->format), buf->audio->channels, chlayout_str,
-           buf->audio->sample_rate, buf->audio->nb_samples,
+           av_get_sample_fmt_name(buf->format), av_frame_get_channels(buf), chlayout_str,
+           buf->sample_rate, buf->nb_samples,
            checksum);
 
     av_log(ctx, AV_LOG_INFO, "plane_checksums: [ ");
