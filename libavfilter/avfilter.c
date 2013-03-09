@@ -40,12 +40,12 @@ void ff_tlog_ref(void *ctx, AVFrame *ref, int end)
 {
     av_unused char buf[16];
     ff_tlog(ctx,
-            "ref[%p buf:%p refcount:%d data:%p linesize[%d, %d, %d, %d] pts:%"PRId64" pos:%"PRId64,
-            ref, ref->buf, ref->buf->refcount, ref->data[0],
+            "ref[%p buf:%p data:%p linesize[%d, %d, %d, %d] pts:%"PRId64" pos:%"PRId64,
+            ref, ref->buf, ref->data[0],
             ref->linesize[0], ref->linesize[1], ref->linesize[2], ref->linesize[3],
-            ref->pts, ref->pos);
+            ref->pts, av_frame_get_pkt_pos(ref));
 
-    if (ref->video) {
+    if (ref->width) {
         ff_tlog(ctx, " a:%d/%d s:%dx%d i:%c iskey:%d type:%c",
                 ref->sample_aspect_ratio.num, ref->sample_aspect_ratio.den,
                 ref->width, ref->height,
@@ -54,7 +54,7 @@ void ff_tlog_ref(void *ctx, AVFrame *ref, int end)
                 ref->key_frame,
                 av_get_picture_type_char(ref->pict_type));
     }
-    if (ref->audio) {
+    if (ref->nb_samples) {
         ff_tlog(ctx, " cl:%"PRId64"d n:%d r:%d",
                 ref->channel_layout,
                 ref->nb_samples,
@@ -714,7 +714,7 @@ static int ff_filter_frame_needs_framing(AVFilterLink *link, AVFrame *frame)
                        "Samples dropped due to memory allocation failure.\n");
                 return 0;
             }
-            avfilter_copy_buffer_ref_props(pbuf, frame);
+            av_frame_copy_props(pbuf, frame);
             pbuf->pts = frame->pts +
                         av_rescale_q(inpos, samples_tb, link->time_base);
             pbuf->nb_samples = 0;
