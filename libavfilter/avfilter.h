@@ -859,6 +859,26 @@ void avfilter_free(AVFilterContext *filter);
 int avfilter_insert_filter(AVFilterLink *link, AVFilterContext *filt,
                            unsigned filt_srcpad_idx, unsigned filt_dstpad_idx);
 
+#if FF_API_AVFILTERBUFFER
+/**
+ * Copy the frame properties of src to dst, without copying the actual
+ * image data.
+ *
+ * @return 0 on success, a negative number on error.
+ */
+attribute_deprecated
+int avfilter_copy_frame_props(AVFilterBufferRef *dst, const AVFrame *src);
+
+/**
+ * Copy the frame properties and data pointers of src to dst, without copying
+ * the actual data.
+ *
+ * @return 0 on success, a negative number on error.
+ */
+attribute_deprecated
+int avfilter_copy_buf_props(AVFrame *dst, const AVFilterBufferRef *src);
+#endif
+
 /**
  * @}
  */
