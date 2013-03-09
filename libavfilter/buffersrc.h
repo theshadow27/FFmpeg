@@ -28,7 +28,6 @@
 #include "libavcodec/avcodec.h"
 #include "avfilter.h"
 
-<<<<<<< HEAD
 enum {
 
     /**
@@ -69,24 +68,15 @@ int av_buffersrc_add_ref(AVFilterContext *buffer_src,
  */
 unsigned av_buffersrc_get_nb_failed_requests(AVFilterContext *buffer_src);
 
-#ifdef FF_API_BUFFERSRC_BUFFER
-||||||| merged common ancestors
-=======
 #if FF_API_AVFILTERBUFFER
->>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
 /**
  * Add a buffer to the filtergraph s.
  *
  * @param buf buffer containing frame data to be passed down the filtergraph.
  * This function will take ownership of buf, the user must not free it.
  * A NULL buf signals EOF -- i.e. no more frames will be sent to this filter.
-<<<<<<< HEAD
- * @deprecated Use av_buffersrc_add_ref(s, picref, AV_BUFFERSRC_FLAG_NO_COPY) instead.
-||||||| merged common ancestors
-=======
  *
  * @deprecated use av_buffersrc_write_frame() or av_buffersrc_add_frame()
->>>>>>> 7e350379f87e7f74420b4813170fe808e2313911
  */
 attribute_deprecated
 int av_buffersrc_buffer(AVFilterContext *s, AVFilterBufferRef *buf);
@@ -120,5 +110,18 @@ int av_buffersrc_write_frame(AVFilterContext *s, const AVFrame *frame);
  * while this function takes ownership of the reference passed to it.
  */
 int av_buffersrc_add_frame(AVFilterContext *ctx, AVFrame *frame);
+
+/**
+ * Add frame data to buffer_src. XXX
+ *
+ * @param buffer_src  pointer to a buffer source context
+ * @param frame       a frame, or NULL to mark EOF
+ * @param flags       a combination of AV_BUFFERSRC_FLAG_*
+ * @return            >= 0 in case of success, a negative AVERROR code
+ *                    in case of failure
+ */
+int av_buffersrc_add_frame_flags(AVFilterContext *buffer_src,
+                                 AVFrame *frame, int flags);
+
 
 #endif /* AVFILTER_BUFFERSRC_H */
