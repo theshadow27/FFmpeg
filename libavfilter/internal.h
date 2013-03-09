@@ -213,8 +213,6 @@ int ff_parse_channel_layout(int64_t *ret, const char *arg, void *log_ctx);
 
 void ff_update_link_current_pts(AVFilterLink *link, int64_t pts);
 
-void ff_free_pool(AVFilterPool *pool);
-
 void ff_command_queue_pop(AVFilterContext *filter);
 
 /* misc trace functions */

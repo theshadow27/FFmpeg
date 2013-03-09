@@ -146,9 +146,6 @@ void avfilter_link_free(AVFilterLink **link)
     if (!*link)
         return;
 
-    if ((*link)->pool)
-        ff_free_pool((*link)->pool);
-
     av_frame_free(&(*link)->partial_buf);
 
     av_freep(link);
