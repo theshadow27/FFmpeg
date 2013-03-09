@@ -150,7 +150,7 @@ static av_cold void uninit(AVFilterContext *ctx)
     TestSourceContext *test = ctx->priv;
 
     av_opt_free(test);
-    avfilter_unref_bufferp(&test->picref);
+    av_frame_free(&test->picref);
 }
 
 static int config_props(AVFilterLink *outlink)
