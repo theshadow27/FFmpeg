@@ -1047,7 +1047,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
     ctx->avctx     = avctx;
     avctx->pix_fmt = AV_PIX_FMT_YUV410P;
-    avcodec_get_frame_defaults(&ctx->frame);
 
     build_requant_tab();
 
@@ -1089,11 +1088,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     /* use BS_BUFFER flag for buffer switching */
     ctx->buf_sel = (ctx->frame_flags >> BS_BUFFER) & 1;
 
-    if (ctx->frame.data[0])
-        avctx->release_buffer(avctx, &ctx->frame);
-
-    ctx->frame.reference = 0;
-    if ((res = ff_get_buffer(avctx, &ctx->frame)) < 0) {
+    if ((res = ff_get_buffer(avctx, frame, 0)) < 0) {
         av_log(ctx->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return res;
     }
@@ -1109,24 +1104,6 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     if ((res = decode_plane(ctx, avctx, &ctx->planes[2], ctx->v_data_ptr, ctx->v_data_size, 10)))
         return res;
 
-<<<<<<< HEAD
-||||||| merged common ancestors
-    if (ctx->frame.data[0])
-        avctx->release_buffer(avctx, &ctx->frame);
-
-    ctx->frame.reference = 0;
-    if ((res = ff_get_buffer(avctx, &ctx->frame)) < 0) {
-        av_log(ctx->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
-        return res;
-    }
-
-=======
-    if ((res = ff_get_buffer(avctx, frame, 0)) < 0) {
-        av_log(ctx->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
-        return res;
-    }
-
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     output_plane(&ctx->planes[0], ctx->buf_sel,
                  frame->data[0], frame->linesize[0],
                  avctx->height);
