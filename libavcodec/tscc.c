@@ -72,21 +72,8 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     int zret; // Zlib return code
     int ret, len = buf_size;
 
-<<<<<<< HEAD
-    c->pic.reference = 3;
-    c->pic.buffer_hints = FF_BUFFER_HINTS_VALID;
-    if ((ret = avctx->reget_buffer(avctx, &c->pic)) < 0) {
-||||||| merged common ancestors
-    if(c->pic.data[0])
-            avctx->release_buffer(avctx, &c->pic);
-
-    c->pic.reference = 1;
-    c->pic.buffer_hints = FF_BUFFER_HINTS_VALID;
-    if ((ret = ff_get_buffer(avctx, &c->pic)) < 0){
-=======
-    if ((ret = ff_get_buffer(avctx, frame, 0)) < 0){
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
-        av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
+    if ((ret = ff_reget_buffer(avctx, frame)) < 0) {
+        av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
         return ret;
     }
 
@@ -139,7 +126,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
     c->height = avctx->height;
 
-    avcodec_get_frame_defaults(&c->pic);
     // Needed if zlib unused or init aborted before inflateInit
     memset(&c->zstream, 0, sizeof(z_stream));
     switch(avctx->bits_per_coded_sample){
