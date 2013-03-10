@@ -333,23 +333,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     GetByteContext gb;
     ThreadFrame frame = { .f = data };
 
-<<<<<<< HEAD
-    if (c->pic.data[0])
-        ff_thread_release_buffer(avctx, &c->pic);
-
-    c->pic.reference = 3;
-    c->pic.buffer_hints = FF_BUFFER_HINTS_VALID;
-    if ((ret = ff_thread_get_buffer(avctx, &c->pic)) < 0) {
-||||||| merged common ancestors
-    if (c->pic.data[0])
-        ff_thread_release_buffer(avctx, &c->pic);
-
-    c->pic.reference = 1;
-    c->pic.buffer_hints = FF_BUFFER_HINTS_VALID;
-    if ((ret = ff_thread_get_buffer(avctx, &c->pic)) < 0) {
-=======
     if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
