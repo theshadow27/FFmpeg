@@ -100,7 +100,9 @@ AVCodec ff_cljr_decoder = {
 
 #if CONFIG_CLJR_ENCODER
 typedef struct CLJRContext {
+    AVClass        *avclass;
     AVFrame         picture;
+    int             dither_type;
 } CLJRContext;
 
 static av_cold int encode_init(AVCodecContext *avctx)
