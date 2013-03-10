@@ -1679,8 +1679,10 @@ int ff_MPV_frame_start(MpegEncContext *s, AVCodecContext *avctx)
         }
     }
 
+#if 0 // BUFREF-FIXME
     memset(s->last_picture.f.data, 0, sizeof(s->last_picture.f.data));
     memset(s->next_picture.f.data, 0, sizeof(s->next_picture.f.data));
+#endif
     if (s->codec_id != AV_CODEC_ID_H264) {
         if (s->last_picture_ptr) {
             ff_mpeg_unref_picture(s, &s->last_picture);
