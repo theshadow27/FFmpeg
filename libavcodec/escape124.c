@@ -216,8 +216,6 @@ static int escape124_decode_frame(AVCodecContext *avctx,
     uint16_t* old_frame_data, *new_frame_data;
     unsigned old_stride, new_stride;
 
-    AVFrame new_frame;
-    avcodec_get_frame_defaults(&new_frame);
     int ret;
 
     init_get_bits(&gb, buf, buf_size * 8);
