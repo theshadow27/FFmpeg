@@ -131,7 +131,7 @@ typedef struct CFrameBuffer {
 typedef struct FourXContext {
     AVCodecContext *avctx;
     DSPContext dsp;
-    AVFrame *last_picture;
+    AVFrame *current_picture, *last_picture;
     GetBitContext pre_gb;          ///< ac/dc prefix
     GetBitContext gb;
     GetByteContext g;
@@ -690,17 +690,9 @@ static int decode_i2_frame(FourXContext *f, AVFrame *frame, const uint8_t *buf, 
     const int width  = f->avctx->width;
     const int height = f->avctx->height;
     const int mbs    = (FFALIGN(width, 16) >> 4) * (FFALIGN(height, 16) >> 4);
-<<<<<<< HEAD
-    uint16_t *dst    = (uint16_t*)f->current_picture->data[0];
-    const int stride =            f->current_picture->linesize[0]>>1;
-    const uint8_t *buf_end = buf + length;
-||||||| merged common ancestors
-    uint16_t *dst    = (uint16_t*)f->current_picture->data[0];
-    const int stride =            f->current_picture->linesize[0]>>1;
-=======
     uint16_t *dst    = (uint16_t*)frame->data[0];
     const int stride =            frame->linesize[0]>>1;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+    const uint8_t *buf_end = buf + length;
     GetByteContext g3;
 
     if (length < mbs * 8) {
@@ -890,64 +882,27 @@ static int decode_frame(AVCodecContext *avctx, void *data,
     // alternatively we would have to use our own buffer management
     avctx->flags |= CODEC_FLAG_EMU_EDGE;
 
-<<<<<<< HEAD
-    p->reference= 3;
-    if ((ret = avctx->reget_buffer(avctx, p)) < 0) {
+    if ((ret = ff_reget_buffer(avctx, f->current_picture)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
-||||||| merged common ancestors
-    if (p->data[0])
-        avctx->release_buffer(avctx, p);
-
-    p->reference = 1;
-    if ((ret = ff_get_buffer(avctx, p)) < 0) {
-        av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
-=======
-    if ((ret = ff_get_buffer(avctx, picture, AV_GET_BUFFER_FLAG_REF)) < 0) {
-        av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         return ret;
     }
 
     if (frame_4cc == AV_RL32("ifr2")) {
-<<<<<<< HEAD
-        p->pict_type= AV_PICTURE_TYPE_I;
-        if ((ret = decode_i2_frame(f, buf - 4, frame_size + 4)) < 0) {
+        f->current_picture->pict_type = AV_PICTURE_TYPE_I;
+        if ((ret = decode_i2_frame(f, f->current_picture, buf - 4, frame_size + 4)) < 0) {
             av_log(f->avctx, AV_LOG_ERROR, "decode i2 frame failed\n");
-||||||| merged common ancestors
-        p->pict_type = AV_PICTURE_TYPE_I;
-        if ((ret = decode_i2_frame(f, buf - 4, frame_size + 4)) < 0)
-=======
-        picture->pict_type = AV_PICTURE_TYPE_I;
-        if ((ret = decode_i2_frame(f, picture, buf - 4, frame_size + 4)) < 0)
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
             return ret;
         }
     } else if (frame_4cc == AV_RL32("ifrm")) {
-<<<<<<< HEAD
-        p->pict_type= AV_PICTURE_TYPE_I;
-        if ((ret = decode_i_frame(f, buf, frame_size)) < 0) {
+        f->current_picture->pict_type = AV_PICTURE_TYPE_I;
+        if ((ret = decode_i_frame(f, f->current_picture, buf, frame_size)) < 0) {
             av_log(f->avctx, AV_LOG_ERROR, "decode i frame failed\n");
-||||||| merged common ancestors
-        p->pict_type = AV_PICTURE_TYPE_I;
-        if ((ret = decode_i_frame(f, buf, frame_size)) < 0)
-=======
-        picture->pict_type = AV_PICTURE_TYPE_I;
-        if ((ret = decode_i_frame(f, picture, buf, frame_size)) < 0)
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
             return ret;
         }
     } else if (frame_4cc == AV_RL32("pfrm") || frame_4cc == AV_RL32("pfr2")) {
         if (!f->last_picture->data[0]) {
-<<<<<<< HEAD
-            f->last_picture->reference = 3;
-            if ((ret = ff_get_buffer(avctx, f->last_picture)) < 0) {
-||||||| merged common ancestors
-            f->last_picture->reference = 1;
-            if ((ret = ff_get_buffer(avctx, f->last_picture)) < 0) {
-=======
             if ((ret = ff_get_buffer(avctx, f->last_picture,
                                      AV_GET_BUFFER_FLAG_REF)) < 0) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
                 av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
                 return ret;
             }
@@ -955,17 +910,9 @@ static int decode_frame(AVCodecContext *avctx, void *data,
                 memset(f->last_picture->data[0] + i*f->last_picture->linesize[0], 0, 2*avctx->width);
         }
 
-<<<<<<< HEAD
-        p->pict_type = AV_PICTURE_TYPE_P;
-        if ((ret = decode_p_frame(f, buf, frame_size)) < 0) {
+        f->current_picture->pict_type = AV_PICTURE_TYPE_P;
+        if ((ret = decode_p_frame(f, f->current_picture, buf, frame_size)) < 0) {
             av_log(f->avctx, AV_LOG_ERROR, "decode p frame failed\n");
-||||||| merged common ancestors
-        p->pict_type = AV_PICTURE_TYPE_P;
-        if ((ret = decode_p_frame(f, buf, frame_size)) < 0)
-=======
-        picture->pict_type = AV_PICTURE_TYPE_P;
-        if ((ret = decode_p_frame(f, picture, buf, frame_size)) < 0)
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
             return ret;
         }
     } else if (frame_4cc == AV_RL32("snd_")) {
@@ -976,10 +923,13 @@ static int decode_frame(AVCodecContext *avctx, void *data,
                buf_size);
     }
 
-    picture->key_frame = picture->pict_type == AV_PICTURE_TYPE_I;
+    f->current_picture->key_frame = f->current_picture->pict_type == AV_PICTURE_TYPE_I;
 
     av_frame_unref(f->last_picture);
-    if ((ret = av_frame_ref(f->last_picture, picture)) < 0)
+    if ((ret = av_frame_ref(f->last_picture, f->current_picture)) < 0)
+        return ret;
+
+    if ((ret = av_frame_ref(picture, f->current_picture)) < 0)
         return ret;
     *got_frame = 1;
 
@@ -1011,8 +961,9 @@ static av_cold int decode_init(AVCodecContext *avctx)
     else
         avctx->pix_fmt = AV_PIX_FMT_BGR555;
 
-    f->last_picture = av_frame_alloc();
-    if (!f->last_picture)
+    f->current_picture = av_frame_alloc();
+    f->last_picture    = av_frame_alloc();
+    if (!f->current_picture  || !f->last_picture)
         return AVERROR(ENOMEM);
 
     return 0;
@@ -1031,6 +982,7 @@ static av_cold int decode_end(AVCodecContext *avctx)
         f->cfrm[i].allocated_size = 0;
     }
     ff_free_vlc(&f->pre_vlc);
+    av_frame_free(&f->current_picture);
     av_frame_free(&f->last_picture);
 
     return 0;
