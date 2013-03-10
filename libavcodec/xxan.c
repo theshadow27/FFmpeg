@@ -392,21 +392,7 @@ static int xan_decode_frame(AVCodecContext *avctx,
     int ftype;
     int ret;
 
-<<<<<<< HEAD
-    s->pic.reference = 3;
-    s->pic.buffer_hints = FF_BUFFER_HINTS_VALID |
-                          FF_BUFFER_HINTS_PRESERVE |
-                          FF_BUFFER_HINTS_REUSABLE;
-    if ((ret = avctx->reget_buffer(avctx, &s->pic))) {
-||||||| merged common ancestors
-    s->pic.reference = 1;
-    s->pic.buffer_hints = FF_BUFFER_HINTS_VALID |
-                          FF_BUFFER_HINTS_PRESERVE |
-                          FF_BUFFER_HINTS_REUSABLE;
-    if ((ret = avctx->reget_buffer(avctx, &s->pic))) {
-=======
     if ((ret = ff_reget_buffer(avctx, &s->pic))) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(s->avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
         return ret;
     }
