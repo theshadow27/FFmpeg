@@ -90,12 +90,9 @@ typedef struct AVCodecInternal {
      */
     int last_audio_frame;
 
-<<<<<<< HEAD
-    /**
-     * The data for the last allocated audio frame.
-     * Stored here so we can free it.
-     */
-    uint8_t *audio_data;
+    AVFrame to_free;
+
+    FramePool *pool;
 
     /**
      * temporary buffer used for encoders to store their bitstream
@@ -109,17 +106,6 @@ typedef struct AVCodecInternal {
      * Number of audio samples to skip at the start of the next decoded frame
      */
     int skip_samples;
-||||||| merged common ancestors
-    /**
-     * The data for the last allocated audio frame.
-     * Stored here so we can free it.
-     */
-    uint8_t *audio_data;
-=======
-    AVFrame to_free;
-
-    FramePool *pool;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 } AVCodecInternal;
 
 struct AVCodecDefault {

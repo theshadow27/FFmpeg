@@ -181,15 +181,9 @@ struct vp56_context {
 };
 
 
-<<<<<<< HEAD
-void ff_vp56_init(AVCodecContext *avctx, int flip, int has_alpha);
+int ff_vp56_init(AVCodecContext *avctx, int flip, int has_alpha);
 void ff_vp56_init_context(AVCodecContext *avctx, VP56Context *s,
                           int flip, int has_alpha);
-||||||| merged common ancestors
-void ff_vp56_init(AVCodecContext *avctx, int flip, int has_alpha);
-=======
-int ff_vp56_init(AVCodecContext *avctx, int flip, int has_alpha);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 int ff_vp56_free(AVCodecContext *avctx);
 int ff_vp56_free_context(VP56Context *s);
 void ff_vp56_init_dequant(VP56Context *s, int quantizer);

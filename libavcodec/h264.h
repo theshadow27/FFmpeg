@@ -644,17 +644,13 @@ typedef struct H264Context {
     int parse_last_mb;
     uint8_t *edge_emu_buffer;
     int16_t *dc_val_base;
-<<<<<<< HEAD
 
     uint8_t *visualization_buffer[3]; ///< temporary buffer vor MV visualization
-||||||| merged common ancestors
-=======
 
     AVBufferPool *qscale_table_pool;
     AVBufferPool *mb_type_pool;
     AVBufferPool *motion_val_pool;
     AVBufferPool *ref_index_pool;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 } H264Context;
 
 extern const uint8_t ff_h264_chroma_qp[7][QP_MAX_NUM + 1]; ///< One chroma qp table for each possible bit depth (8-14).

@@ -171,22 +171,10 @@ typedef struct Picture{
 
     int b_frame_score;          /* */
     int needs_realloc;          ///< Picture needs to be reallocated (eg due to a frame size change)
-<<<<<<< HEAD
     int period_since_free;      ///< "cycles" since this Picture has been freed
-    /**
-     * hardware accelerator private data
-     */
-    void *hwaccel_picture_private;
-||||||| merged common ancestors
-    /**
-     * hardware accelerator private data
-     */
-    void *hwaccel_picture_private;
-=======
 
     int reference;
     int shared;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 } Picture;
 
 /**
