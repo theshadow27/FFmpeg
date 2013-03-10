@@ -60,6 +60,7 @@ static av_cold int decode_init(AVCodecContext *avctx)
     avctx->pix_fmt             = AV_PIX_FMT_YUV422P10;
     avctx->bits_per_raw_sample = 10;
 
+<<<<<<< HEAD
     avctx->coded_frame         = avcodec_alloc_frame();
     if (!avctx->coded_frame)
         return AVERROR(ENOMEM);
@@ -69,19 +70,35 @@ static av_cold int decode_init(AVCodecContext *avctx)
     if (HAVE_MMX)
         v210_x86_init(s);
 
+||||||| merged common ancestors
+    avctx->coded_frame         = avcodec_alloc_frame();
+    if (!avctx->coded_frame)
+        return AVERROR(ENOMEM);
+
+=======
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     return 0;
 }
 
 static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
                         AVPacket *avpkt)
 {
+<<<<<<< HEAD
     V210DecContext *s = avctx->priv_data;
 
     int h, w, ret, stride, aligned_input;
     AVFrame *pic = avctx->coded_frame;
+||||||| merged common ancestors
+    int h, w, ret;
+    AVFrame *pic = avctx->coded_frame;
+=======
+    int h, w, ret;
+    AVFrame *pic = data;
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     const uint8_t *psrc = avpkt->data;
     uint16_t *y, *u, *v;
 
+<<<<<<< HEAD
     if (s->custom_stride )
         stride = s->custom_stride;
     else {
@@ -89,6 +106,12 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
         stride = aligned_width * 8 / 3;
     }
 
+||||||| merged common ancestors
+    if (pic->data[0])
+        avctx->release_buffer(avctx, pic);
+
+=======
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     if (avpkt->size < stride * avctx->height) {
         if ((((avctx->width + 23) / 24) * 24 * 8) / 3 * avctx->height == avpkt->size) {
             stride = avpkt->size / avctx->height;
@@ -101,6 +124,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
         }
     }
 
+<<<<<<< HEAD
     aligned_input = !((uintptr_t)psrc & 0xf) && !(stride & 0xf);
     if (aligned_input != s->aligned_input) {
         s->aligned_input = aligned_input;
@@ -113,6 +137,12 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
 
     pic->reference = 0;
     if ((ret = ff_get_buffer(avctx, pic)) < 0)
+||||||| merged common ancestors
+    pic->reference = 0;
+    if ((ret = ff_get_buffer(avctx, pic)) < 0)
+=======
+    if ((ret = ff_get_buffer(avctx, pic, 0)) < 0)
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         return ret;
 
     y = (uint16_t*)pic->data[0];
@@ -155,11 +185,11 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     }
 
     *got_frame      = 1;
-    *(AVFrame*)data = *avctx->coded_frame;
 
     return avpkt->size;
 }
 
+<<<<<<< HEAD
 static av_cold int decode_close(AVCodecContext *avctx)
 {
     AVFrame *pic = avctx->coded_frame;
@@ -184,13 +214,25 @@ static const AVClass v210dec_class = {
     LIBAVUTIL_VERSION_INT,
 };
 
+||||||| merged common ancestors
+static av_cold int decode_close(AVCodecContext *avctx)
+{
+    AVFrame *pic = avctx->coded_frame;
+    if (pic->data[0])
+        avctx->release_buffer(avctx, pic);
+    av_freep(&avctx->coded_frame);
+
+    return 0;
+}
+
+=======
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 AVCodec ff_v210_decoder = {
     .name           = "v210",
     .type           = AVMEDIA_TYPE_VIDEO,
     .id             = AV_CODEC_ID_V210,
     .priv_data_size = sizeof(V210DecContext),
     .init           = decode_init,
-    .close          = decode_close,
     .decode         = decode_frame,
     .capabilities   = CODEC_CAP_DR1,
     .long_name      = NULL_IF_CONFIG_SMALL("Uncompressed 4:2:2 10-bit"),

@@ -361,11 +361,14 @@ static av_cold int decode_init(AVCodecContext *avctx)
         return AVERROR(ENOMEM);
 
     s->bpp = avctx->bits_per_coded_sample;
+<<<<<<< HEAD
     avcodec_get_frame_defaults(&s->frame);
+||||||| merged common ancestors
+=======
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
     if ((err = extract_header(avctx, NULL)) < 0)
         return err;
-    s->frame.reference = 3;
 
     return 0;
 }
@@ -525,6 +528,7 @@ static void decode_rgb8(GetByteContext *gb, uint8_t *dst, int width, int height,
     }
 }
 
+<<<<<<< HEAD
 /**
  * Decode RGBN buffer
  * @param[out] dst Destination buffer
@@ -540,6 +544,27 @@ static void decode_rgbn(GetByteContext *gb, uint8_t *dst, int width, int height,
         length = pixel & 0x7;
         pixel >>= 4;
         DECODE_RGBX_COMMON(uint16_t)
+||||||| merged common ancestors
+    if (s->init) {
+        if ((res = avctx->reget_buffer(avctx, &s->frame)) < 0) {
+            av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
+            return res;
+        }
+    } else if ((res = ff_get_buffer(avctx, &s->frame)) < 0) {
+        av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
+        return res;
+    } else if (avctx->bits_per_coded_sample <= 8 && avctx->pix_fmt != AV_PIX_FMT_GRAY8) {
+        if ((res = cmap_read_palette(avctx, (uint32_t*)s->frame.data[1])) < 0)
+            return res;
+=======
+    if ((res = ff_reget_buffer(avctx, &s->frame)) < 0)
+        return res;
+
+    if (!s->init && avctx->bits_per_coded_sample <= 8 &&
+        avctx->pix_fmt != AV_PIX_FMT_GRAY8) {
+        if ((res = cmap_read_palette(avctx, (uint32_t*)s->frame.data[1])) < 0)
+            return res;
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     }
 }
 
@@ -642,11 +667,24 @@ static void decode_deep_tvdc32(uint8_t *dst, const uint8_t *src, int src_size, i
     }
 }
 
+<<<<<<< HEAD
 static int unsupported(AVCodecContext *avctx)
 {
     IffContext *s = avctx->priv_data;
     av_log_ask_for_sample(avctx, "unsupported bitmap (compression %i, bpp %i, ham %i)\n", s->compression, s->bpp, s->ham);
     return AVERROR_INVALIDDATA;
+||||||| merged common ancestors
+    *got_frame = 1;
+    *(AVFrame*)data = s->frame;
+    return buf_size;
+=======
+    if ((res = av_frame_ref(data, &s->frame)) < 0)
+        return res;
+
+    *got_frame = 1;
+
+    return buf_size;
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 }
 
 static int decode_frame(AVCodecContext *avctx,
@@ -660,6 +698,7 @@ static int decode_frame(AVCodecContext *avctx,
     int y, plane, res;
     GetByteContext gb;
 
+<<<<<<< HEAD
     if ((res = extract_header(avctx, avpkt)) < 0)
         return res;
     if (s->init) {
@@ -669,8 +708,27 @@ static int decode_frame(AVCodecContext *avctx,
         }
     } else if ((res = ff_get_buffer(avctx, &s->frame)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
+||||||| merged common ancestors
+    if (s->init) {
+        if ((res = avctx->reget_buffer(avctx, &s->frame)) < 0) {
+            av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
+            return res;
+        }
+    } else if ((res = ff_get_buffer(avctx, &s->frame)) < 0) {
+        av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
+=======
+    if ((res = ff_reget_buffer(avctx, &s->frame)) < 0)
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         return res;
+<<<<<<< HEAD
     } else if (avctx->bits_per_coded_sample <= 8 && avctx->pix_fmt == AV_PIX_FMT_PAL8) {
+||||||| merged common ancestors
+    } else if (avctx->bits_per_coded_sample <= 8 && avctx->pix_fmt != AV_PIX_FMT_GRAY8) {
+=======
+
+    if (!s->init && avctx->bits_per_coded_sample <= 8 &&
+        avctx->pix_fmt != AV_PIX_FMT_GRAY8) {
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         if ((res = cmap_read_palette(avctx, (uint32_t*)s->frame.data[1])) < 0)
             return res;
     } else if (avctx->pix_fmt == AV_PIX_FMT_RGB32 && avctx->bits_per_coded_sample <= 8) {
@@ -853,16 +911,18 @@ static int decode_frame(AVCodecContext *avctx,
         return unsupported(avctx);
     }
 
+    if ((res = av_frame_ref(data, &s->frame)) < 0)
+        return res;
+
     *got_frame = 1;
-    *(AVFrame*)data = s->frame;
+
     return buf_size;
 }
 
 static av_cold int decode_end(AVCodecContext *avctx)
 {
     IffContext *s = avctx->priv_data;
-    if (s->frame.data[0])
-        avctx->release_buffer(avctx, &s->frame);
+    av_frame_unref(&s->frame);
     av_freep(&s->planebuf);
     av_freep(&s->ham_buf);
     av_freep(&s->ham_palbuf);

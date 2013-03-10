@@ -28,6 +28,7 @@
 #include "bytestream.h"
 #include "get_bits.h"
 #include "dsputil.h"
+#include "internal.h"
 
 #define TM2_ESCAPE 0x80000000
 #define TM2_DELTAS 64
@@ -866,9 +867,18 @@ static int decode_frame(AVCodecContext *avctx,
         av_log(avctx, AV_LOG_ERROR, "Cannot allocate temporary buffer\n");
         return AVERROR(ENOMEM);
     }
+<<<<<<< HEAD
     p->reference = 3;
     p->buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
     if ((ret = avctx->reget_buffer(avctx, p)) < 0) {
+||||||| merged common ancestors
+    p->reference = 1;
+    p->buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
+    if ((ret = avctx->reget_buffer(avctx, p)) < 0) {
+=======
+
+    if ((ret = ff_reget_buffer(avctx, p)) < 0) {
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
@@ -902,9 +912,17 @@ static int decode_frame(AVCodecContext *avctx,
 
     l->cur = !l->cur;
     *got_frame      = 1;
+<<<<<<< HEAD
     *(AVFrame*)data = l->pic;
+||||||| merged common ancestors
+    *(AVFrame*)data = l->pic;
+    av_free(swbuf);
+=======
+    ret = av_frame_ref(data, &l->pic);
+    av_free(swbuf);
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
-    return buf_size;
+    return (ret < 0) ? ret : buf_size;
 }
 
 static av_cold int decode_init(AVCodecContext *avctx)
@@ -989,8 +1007,7 @@ static av_cold int decode_end(AVCodecContext *avctx)
     av_freep(&l->buffer);
     l->buffer_size = 0;
 
-    if (pic->data[0])
-        avctx->release_buffer(avctx, pic);
+    av_frame_unref(pic);
 
     return 0;
 }

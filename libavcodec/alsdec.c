@@ -1480,8 +1480,16 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame_ptr,
 
     /* get output buffer */
     frame->nb_samples = ctx->cur_frame_length;
+<<<<<<< HEAD
     if ((ret = ff_get_buffer(avctx, frame)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed.\n");
+||||||| merged common ancestors
+    if ((ret = ff_get_buffer(avctx, frame)) < 0) {
+        av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
+=======
+    if ((ret = ff_get_buffer(avctx, frame, 0)) < 0) {
+        av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         return ret;
     }
 

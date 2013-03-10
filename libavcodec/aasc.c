@@ -29,15 +29,22 @@
 #include <string.h>
 
 #include "avcodec.h"
+#include "internal.h"
 #include "msrledec.h"
 
 typedef struct AascContext {
     AVCodecContext *avctx;
     GetByteContext gb;
+<<<<<<< HEAD
     AVFrame frame;
 
     uint32_t palette[AVPALETTE_COUNT];
     int palette_size;
+||||||| merged common ancestors
+    AVFrame frame;
+=======
+    AVFrame *frame;
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 } AascContext;
 
 static av_cold int aasc_decode_init(AVCodecContext *avctx)
@@ -70,6 +77,10 @@ static av_cold int aasc_decode_init(AVCodecContext *avctx)
     }
     avcodec_get_frame_defaults(&s->frame);
 
+    s->frame = av_frame_alloc();
+    if (!s->frame)
+        return AVERROR(ENOMEM);
+
     return 0;
 }
 
@@ -82,6 +93,7 @@ static int aasc_decode_frame(AVCodecContext *avctx,
     AascContext *s     = avctx->priv_data;
     int compr, i, stride, psize, ret;
 
+<<<<<<< HEAD
     if (buf_size < 4) {
         av_log(avctx, AV_LOG_ERROR, "frame too short\n");
         return AVERROR_INVALIDDATA;
@@ -90,6 +102,13 @@ static int aasc_decode_frame(AVCodecContext *avctx,
     s->frame.reference = 3;
     s->frame.buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
     if ((ret = avctx->reget_buffer(avctx, &s->frame)) < 0) {
+||||||| merged common ancestors
+    s->frame.reference = 1;
+    s->frame.buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
+    if ((ret = avctx->reget_buffer(avctx, &s->frame)) < 0) {
+=======
+    if ((ret = ff_reget_buffer(avctx, s->frame)) < 0) {
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
         return ret;
     }
@@ -108,18 +127,24 @@ static int aasc_decode_frame(AVCodecContext *avctx,
     case 0:
         stride = (avctx->width * psize + psize) & ~psize;
         for (i = avctx->height - 1; i >= 0; i--) {
+<<<<<<< HEAD
             if (avctx->width * psize > buf_size) {
                 av_log(avctx, AV_LOG_ERROR, "Next line is beyond buffer bounds\n");
                 break;
             }
             memcpy(s->frame.data[0] + i*s->frame.linesize[0], buf, avctx->width * psize);
+||||||| merged common ancestors
+            memcpy(s->frame.data[0] + i * s->frame.linesize[0], buf, avctx->width * 3);
+=======
+            memcpy(s->frame->data[0] + i * s->frame->linesize[0], buf, avctx->width * 3);
+>>>>>>> 759001c534287a96dc96d1e274665feb7059145d
             buf += stride;
             buf_size -= stride;
         }
         break;
     case 1:
         bytestream2_init(&s->gb, buf, buf_size);
-        ff_msrle_decode(avctx, (AVPicture*)&s->frame, 8, &s->gb);
+        ff_msrle_decode(avctx, (AVPicture*)s->frame, 8, &s->gb);
         break;
     default:
         av_log(avctx, AV_LOG_ERROR, "Unknown compression type %d\n", compr);
@@ -135,7 +160,8 @@ static int aasc_decode_frame(AVCodecContext *avctx,
         memcpy(s->frame.data[1], s->palette, s->palette_size);
 
     *got_frame = 1;
-    *(AVFrame*)data = s->frame;
+    if ((ret = av_frame_ref(data, s->frame)) < 0)
+        return ret;
 
     /* report that the buffer was completely consumed */
     return buf_size;
@@ -145,9 +171,7 @@ static av_cold int aasc_decode_end(AVCodecContext *avctx)
 {
     AascContext *s = avctx->priv_data;
 
-    /* release the last frame */
-    if (s->frame.data[0])
-        avctx->release_buffer(avctx, &s->frame);
+    av_frame_free(&s->frame);
 
     return 0;
 }
