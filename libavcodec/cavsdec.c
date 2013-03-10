@@ -976,15 +976,10 @@ static int decode_pic(AVSContext *h)
             skip_bits(&h->gb, 1); //marker_bit
     }
 
-<<<<<<< HEAD
-    if ((ret = ff_get_buffer(h->avctx, h->cur.f)) < 0)
+    if ((ret = ff_get_buffer(h->avctx, h->cur.f,
+                             h->cur.f->pict_type == AV_PICTURE_TYPE_B ?
+                             0 : AV_GET_BUFFER_FLAG_REF)) < 0)
         return ret;
-||||||| merged common ancestors
-    ff_get_buffer(h->avctx, h->cur.f);
-=======
-    ff_get_buffer(h->avctx, h->cur.f, h->cur.f->pict_type == AV_PICTURE_TYPE_B ?
-                  0 : AV_GET_BUFFER_FLAG_REF);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
     if (!h->edge_emu_buffer) {
         int alloc_size = FFALIGN(FFABS(h->cur.f->linesize[0]) + 32, 32);
