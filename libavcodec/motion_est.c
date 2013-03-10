@@ -581,21 +581,13 @@ static inline int h263_mv4_search(MpegEncContext *s, int mx, int my, int shift)
         const int mot_stride = s->b8_stride;
         const int mot_xy = s->block_index[block];
 
-<<<<<<< HEAD
         if(saftey_cliping){
             c->xmax = - 16*s->mb_x + s->width  - 8*(block &1);
             c->ymax = - 16*s->mb_y + s->height - 8*(block>>1);
         }
 
-        P_LEFT[0] = s->current_picture.f.motion_val[0][mot_xy - 1][0];
-        P_LEFT[1] = s->current_picture.f.motion_val[0][mot_xy - 1][1];
-||||||| merged common ancestors
-        P_LEFT[0] = s->current_picture.f.motion_val[0][mot_xy - 1][0];
-        P_LEFT[1] = s->current_picture.f.motion_val[0][mot_xy - 1][1];
-=======
         P_LEFT[0] = s->current_picture.motion_val[0][mot_xy - 1][0];
         P_LEFT[1] = s->current_picture.motion_val[0][mot_xy - 1][1];
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
         if(P_LEFT[0]       > (c->xmax<<shift)) P_LEFT[0]       = (c->xmax<<shift);
 
