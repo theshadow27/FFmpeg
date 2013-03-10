@@ -35,16 +35,10 @@
 typedef struct AascContext {
     AVCodecContext *avctx;
     GetByteContext gb;
-<<<<<<< HEAD
-    AVFrame frame;
+    AVFrame *frame;
 
     uint32_t palette[AVPALETTE_COUNT];
     int palette_size;
-||||||| merged common ancestors
-    AVFrame frame;
-=======
-    AVFrame *frame;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 } AascContext;
 
 static av_cold int aasc_decode_init(AVCodecContext *avctx)
@@ -75,7 +69,6 @@ static av_cold int aasc_decode_init(AVCodecContext *avctx)
         av_log(avctx, AV_LOG_ERROR, "Unsupported bit depth: %d\n", avctx->bits_per_coded_sample);
         return -1;
     }
-    avcodec_get_frame_defaults(&s->frame);
 
     s->frame = av_frame_alloc();
     if (!s->frame)
@@ -93,22 +86,12 @@ static int aasc_decode_frame(AVCodecContext *avctx,
     AascContext *s     = avctx->priv_data;
     int compr, i, stride, psize, ret;
 
-<<<<<<< HEAD
     if (buf_size < 4) {
         av_log(avctx, AV_LOG_ERROR, "frame too short\n");
         return AVERROR_INVALIDDATA;
     }
 
-    s->frame.reference = 3;
-    s->frame.buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
-    if ((ret = avctx->reget_buffer(avctx, &s->frame)) < 0) {
-||||||| merged common ancestors
-    s->frame.reference = 1;
-    s->frame.buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
-    if ((ret = avctx->reget_buffer(avctx, &s->frame)) < 0) {
-=======
     if ((ret = ff_reget_buffer(avctx, s->frame)) < 0) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
         return ret;
     }
@@ -127,17 +110,11 @@ static int aasc_decode_frame(AVCodecContext *avctx,
     case 0:
         stride = (avctx->width * psize + psize) & ~psize;
         for (i = avctx->height - 1; i >= 0; i--) {
-<<<<<<< HEAD
             if (avctx->width * psize > buf_size) {
                 av_log(avctx, AV_LOG_ERROR, "Next line is beyond buffer bounds\n");
                 break;
             }
-            memcpy(s->frame.data[0] + i*s->frame.linesize[0], buf, avctx->width * psize);
-||||||| merged common ancestors
-            memcpy(s->frame.data[0] + i * s->frame.linesize[0], buf, avctx->width * 3);
-=======
-            memcpy(s->frame->data[0] + i * s->frame->linesize[0], buf, avctx->width * 3);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+            memcpy(s->frame->data[0] + i * s->frame->linesize[0], buf, avctx->width * psize);
             buf += stride;
             buf_size -= stride;
         }
@@ -157,7 +134,7 @@ static int aasc_decode_frame(AVCodecContext *avctx,
     }
 
     if (avctx->pix_fmt == AV_PIX_FMT_PAL8)
-        memcpy(s->frame.data[1], s->palette, s->palette_size);
+        memcpy(s->frame->data[1], s->palette, s->palette_size);
 
     *got_frame = 1;
     if ((ret = av_frame_ref(data, s->frame)) < 0)
