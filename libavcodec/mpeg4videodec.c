@@ -387,32 +387,6 @@ int ff_mpeg4_decode_video_packet_header(MpegEncContext *s)
         av_log(s->avctx, AV_LOG_ERROR, "illegal mb_num in video packet (%d %d) \n", mb_num, s->mb_num);
         return -1;
     }
-<<<<<<< HEAD
-||||||| merged common ancestors
-    if(s->pict_type == AV_PICTURE_TYPE_B){
-        int mb_x = 0, mb_y = 0;
-
-        while (s->next_picture.f.mbskip_table[s->mb_index2xy[mb_num]]) {
-            if (!mb_x)
-                ff_thread_await_progress(&s->next_picture_ptr->f, mb_y++, 0);
-            mb_num++;
-            if (++mb_x == s->mb_width) mb_x = 0;
-        }
-        if(mb_num >= s->mb_num) return -1; // slice contains just skipped MBs which where already decoded
-    }
-=======
-    if(s->pict_type == AV_PICTURE_TYPE_B){
-        int mb_x = 0, mb_y = 0;
-
-        while (s->next_picture.mbskip_table[s->mb_index2xy[mb_num]]) {
-            if (!mb_x)
-                ff_thread_await_progress(&s->next_picture_ptr->tf, mb_y++, 0);
-            mb_num++;
-            if (++mb_x == s->mb_width) mb_x = 0;
-        }
-        if(mb_num >= s->mb_num) return -1; // slice contains just skipped MBs which where already decoded
-    }
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
     s->mb_x= mb_num % s->mb_width;
     s->mb_y= mb_num / s->mb_width;
@@ -1526,30 +1500,14 @@ end:
             } else if (s->mb_x + s->mb_y*s->mb_width + 1 >= next)
                 return SLICE_END;
 
-<<<<<<< HEAD
             if(s->pict_type==AV_PICTURE_TYPE_B){
                 const int delta= s->mb_x + 1 == s->mb_width ? 2 : 1;
-                ff_thread_await_progress(&s->next_picture_ptr->f,
-||||||| merged common ancestors
-            if (s->pict_type == AV_PICTURE_TYPE_B && s->next_picture.f.mbskip_table[xy + delta]) {
-                ff_thread_await_progress(&s->next_picture_ptr->f,
-=======
-            if (s->pict_type == AV_PICTURE_TYPE_B && s->next_picture.mbskip_table[xy + delta]) {
                 ff_thread_await_progress(&s->next_picture_ptr->tf,
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
                                         (s->mb_x + delta >= s->mb_width) ? FFMIN(s->mb_y+1, s->mb_height-1) : s->mb_y, 0);
-                if (s->next_picture.f.mbskip_table[xy + delta])
+                if (s->next_picture.mbskip_table[xy + delta])
                     return SLICE_OK;
             }
 
-<<<<<<< HEAD
-||||||| merged common ancestors
-            if (s->pict_type == AV_PICTURE_TYPE_B && s->next_picture.f.mbskip_table[xy + delta])
-                return SLICE_OK;
-=======
-            if (s->pict_type == AV_PICTURE_TYPE_B && s->next_picture.mbskip_table[xy + delta])
-                return SLICE_OK;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
             return SLICE_END;
         }
     }
