@@ -879,6 +879,8 @@ static int decode_frame(AVCodecContext *avctx, void *data,
         frame_size = buf_size - 12;
     }
 
+    FFSWAP(AVFrame*, f->current_picture, f->last_picture);
+
     // alternatively we would have to use our own buffer management
     avctx->flags |= CODEC_FLAG_EMU_EDGE;
 
@@ -924,10 +926,6 @@ static int decode_frame(AVCodecContext *avctx, void *data,
     }
 
     f->current_picture->key_frame = f->current_picture->pict_type == AV_PICTURE_TYPE_I;
-
-    av_frame_unref(f->last_picture);
-    if ((ret = av_frame_ref(f->last_picture, f->current_picture)) < 0)
-        return ret;
 
     if ((ret = av_frame_ref(picture, f->current_picture)) < 0)
         return ret;
