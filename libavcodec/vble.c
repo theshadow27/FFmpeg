@@ -80,17 +80,9 @@ static int vble_unpack(VBLEContext *ctx, GetBitContext *gb)
     return 0;
 }
 
-<<<<<<< HEAD
-static void vble_restore_plane(VBLEContext *ctx, GetBitContext *gb, int plane,
-                               int offset, int width, int height)
-||||||| merged common ancestors
-static void vble_restore_plane(VBLEContext *ctx, int plane, int offset,
-                              int width, int height)
-=======
 static void vble_restore_plane(VBLEContext *ctx, AVFrame *pic,
-                               int plane, int offset,
-                               int width, int height)
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+                               GetBitContext *gb, int plane,
+                               int offset, int width, int height)
 {
     uint8_t *dst = pic->data[plane];
     uint8_t *val = ctx->val + offset;
@@ -130,27 +122,11 @@ static int vble_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     int offset = 0;
     int width_uv = avctx->width / 2, height_uv = avctx->height / 2;
 
-<<<<<<< HEAD
-    pic->reference = 0;
-
-    /* Clear buffer if need be */
-    if (pic->data[0])
-        avctx->release_buffer(avctx, pic);
-
     if (avpkt->size < 4 || avpkt->size - 4 > INT_MAX/8) {
         av_log(avctx, AV_LOG_ERROR, "Invalid packet size\n");
         return AVERROR_INVALIDDATA;
     }
 
-||||||| merged common ancestors
-    pic->reference = 0;
-
-    /* Clear buffer if need be */
-    if (pic->data[0])
-        avctx->release_buffer(avctx, pic);
-
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     /* Allocate buffer */
     if (ff_get_buffer(avctx, pic, 0) < 0) {
         av_log(avctx, AV_LOG_ERROR, "Could not allocate buffer.\n");
@@ -176,33 +152,15 @@ static int vble_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     }
 
     /* Restore planes. Should be almost identical to Huffyuv's. */
-<<<<<<< HEAD
-    vble_restore_plane(ctx, &gb, 0, offset, avctx->width, avctx->height);
-||||||| merged common ancestors
-    vble_restore_plane(ctx, 0, offset, avctx->width, avctx->height);
-=======
-    vble_restore_plane(ctx, pic, 0, offset, avctx->width, avctx->height);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+    vble_restore_plane(ctx, pic, &gb, 0, offset, avctx->width, avctx->height);
 
     /* Chroma */
     if (!(ctx->avctx->flags & CODEC_FLAG_GRAY)) {
         offset += avctx->width * avctx->height;
-<<<<<<< HEAD
-        vble_restore_plane(ctx, &gb, 1, offset, width_uv, height_uv);
-||||||| merged common ancestors
-        vble_restore_plane(ctx, 1, offset, width_uv, height_uv);
-=======
-        vble_restore_plane(ctx, pic, 1, offset, width_uv, height_uv);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+        vble_restore_plane(ctx, pic, &gb, 1, offset, width_uv, height_uv);
 
         offset += width_uv * height_uv;
-<<<<<<< HEAD
-        vble_restore_plane(ctx, &gb, 2, offset, width_uv, height_uv);
-||||||| merged common ancestors
-        vble_restore_plane(ctx, 2, offset, width_uv, height_uv);
-=======
-        vble_restore_plane(ctx, pic, 2, offset, width_uv, height_uv);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+        vble_restore_plane(ctx, pic, &gb, 2, offset, width_uv, height_uv);
     }
 
     *got_frame       = 1;
