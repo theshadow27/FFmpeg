@@ -298,7 +298,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
     avctx->pix_fmt = AV_PIX_FMT_PAL8;
 
-    avcodec_get_frame_defaults(&c->pic);
     avcodec_get_frame_defaults(&c->prev);
 
     c->dsize = avctx->width * avctx->height * 2;
