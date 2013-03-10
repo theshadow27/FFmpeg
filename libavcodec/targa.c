@@ -168,32 +168,16 @@ static int decode_frame(AVCodecContext *avctx,
         return AVERROR_INVALIDDATA;
     }
 
-<<<<<<< HEAD
-    if (s->picture.data[0])
-        avctx->release_buffer(avctx, &s->picture);
-
     if (colors && (colors + first_clr) > 256) {
         av_log(avctx, AV_LOG_ERROR, "Incorrect palette: %i colors with offset %i\n", colors, first_clr);
         return AVERROR_INVALIDDATA;
     }
 
-||||||| merged common ancestors
-    if(s->picture.data[0])
-        avctx->release_buffer(avctx, &s->picture);
-
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     if ((ret = av_image_check_size(w, h, 0, avctx)) < 0)
         return ret;
     if (w != avctx->width || h != avctx->height)
         avcodec_set_dimensions(avctx, w, h);
-<<<<<<< HEAD
-    if ((ret = ff_get_buffer(avctx, p)) < 0) {
-||||||| merged common ancestors
-    if ((ret = ff_get_buffer(avctx, p)) < 0){
-=======
-    if ((ret = ff_get_buffer(avctx, p, 0)) < 0){
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+    if ((ret = ff_get_buffer(avctx, p, 0)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
@@ -314,48 +298,6 @@ static int decode_frame(AVCodecContext *avctx,
     return avpkt->size;
 }
 
-<<<<<<< HEAD
-static av_cold int targa_init(AVCodecContext *avctx)
-{
-    TargaContext *s = avctx->priv_data;
-
-    avcodec_get_frame_defaults(&s->picture);
-    avctx->coded_frame = &s->picture;
-
-    return 0;
-}
-
-static av_cold int targa_end(AVCodecContext *avctx)
-{
-    TargaContext *s = avctx->priv_data;
-
-    if (s->picture.data[0])
-        avctx->release_buffer(avctx, &s->picture);
-
-    return 0;
-}
-
-||||||| merged common ancestors
-static av_cold int targa_init(AVCodecContext *avctx){
-    TargaContext *s = avctx->priv_data;
-
-    avcodec_get_frame_defaults(&s->picture);
-    avctx->coded_frame = &s->picture;
-
-    return 0;
-}
-
-static av_cold int targa_end(AVCodecContext *avctx){
-    TargaContext *s = avctx->priv_data;
-
-    if(s->picture.data[0])
-        avctx->release_buffer(avctx, &s->picture);
-
-    return 0;
-}
-
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 AVCodec ff_targa_decoder = {
     .name           = "targa",
     .type           = AVMEDIA_TYPE_VIDEO,
