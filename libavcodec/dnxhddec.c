@@ -66,18 +66,7 @@ static av_cold int dnxhd_decode_init(AVCodecContext *avctx)
     DNXHDContext *ctx = avctx->priv_data;
 
     ctx->avctx = avctx;
-<<<<<<< HEAD
-    avctx->coded_frame = &ctx->picture;
-    avcodec_get_frame_defaults(&ctx->picture);
-    ctx->picture.type = AV_PICTURE_TYPE_I;
-    ctx->picture.key_frame = 1;
     ctx->cid = -1;
-||||||| merged common ancestors
-    avctx->coded_frame = &ctx->picture;
-    ctx->picture.type = AV_PICTURE_TYPE_I;
-    ctx->picture.key_frame = 1;
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     return 0;
 }
 
@@ -373,6 +362,7 @@ static int dnxhd_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     const uint8_t *buf = avpkt->data;
     int buf_size = avpkt->size;
     DNXHDContext *ctx = avctx->priv_data;
+    ThreadFrame frame = { .f = data };
     AVFrame *picture = data;
     int first_field = 1;
     int ret;
@@ -395,17 +385,7 @@ static int dnxhd_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     avcodec_set_dimensions(avctx, ctx->width, ctx->height);
 
     if (first_field) {
-<<<<<<< HEAD
-        if (ctx->picture.data[0])
-            ff_thread_release_buffer(avctx, &ctx->picture);
-        if ((ret = ff_thread_get_buffer(avctx, &ctx->picture)) < 0) {
-||||||| merged common ancestors
-        if (ctx->picture.data[0])
-            avctx->release_buffer(avctx, &ctx->picture);
-        if (ff_get_buffer(avctx, &ctx->picture) < 0) {
-=======
-        if ((ret = ff_get_buffer(avctx, picture, 0)) < 0) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+        if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0) {
             av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
             return ret;
         }
@@ -430,14 +410,6 @@ static av_cold int dnxhd_decode_close(AVCodecContext *avctx)
 {
     DNXHDContext *ctx = avctx->priv_data;
 
-<<<<<<< HEAD
-    if (ctx->picture.data[0])
-        ff_thread_release_buffer(avctx, &ctx->picture);
-||||||| merged common ancestors
-    if (ctx->picture.data[0])
-        avctx->release_buffer(avctx, &ctx->picture);
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     ff_free_vlc(&ctx->ac_vlc);
     ff_free_vlc(&ctx->dc_vlc);
     ff_free_vlc(&ctx->run_vlc);
