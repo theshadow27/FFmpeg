@@ -546,18 +546,10 @@ static int svq1_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     }
 
     if (!s->current_picture.data[0]) {
-<<<<<<< HEAD
-        if ((ret = ff_get_buffer(avctx, &s->current_picture))< 0 ||
-            (ret = ff_get_buffer(avctx, &s->last_picture))   < 0) {
+        if ((ret = ff_get_buffer(avctx, &s->current_picture, 0))< 0 ||
+            (ret = ff_get_buffer(avctx, &s->last_picture, 0))   < 0) {
             return ret;
         }
-||||||| merged common ancestors
-        ff_get_buffer(avctx, &s->current_picture);
-        ff_get_buffer(avctx, &s->last_picture);
-=======
-        ff_get_buffer(avctx, &s->current_picture, 0);
-        ff_get_buffer(avctx, &s->last_picture, 0);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         s->scratchbuf = av_malloc(s->current_picture.linesize[0] * 16 * 2);
     }
 
