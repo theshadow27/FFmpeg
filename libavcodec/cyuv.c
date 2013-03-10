@@ -52,7 +52,6 @@ static av_cold int cyuv_decode_init(AVCodecContext *avctx)
     if (s->width & 0x3)
         return AVERROR_INVALIDDATA;
     s->height = avctx->height;
-    avcodec_get_frame_defaults(&s->frame);
 
     return 0;
 }
@@ -117,9 +116,9 @@ static int cyuv_decode_frame(AVCodecContext *avctx,
 
     if (buf_size == rawsize) {
         int linesize = FFALIGN(s->width,2) * 2;
-        y_plane += s->frame.linesize[0] * s->height;
+        y_plane += frame->linesize[0] * s->height;
         for (stream_ptr = 0; stream_ptr < rawsize; stream_ptr += linesize) {
-            y_plane -= s->frame.linesize[0];
+            y_plane -= frame->linesize[0];
             memcpy(y_plane, buf+stream_ptr, linesize);
         }
     } else {
