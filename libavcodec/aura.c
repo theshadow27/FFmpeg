@@ -33,7 +33,6 @@ static av_cold int aura_decode_init(AVCodecContext *avctx)
     if (avctx->width & 0x3)
         return AVERROR(EINVAL);
     avctx->pix_fmt = AV_PIX_FMT_YUV422P;
-    avcodec_get_frame_defaults(&s->frame);
 
     return 0;
 }
