@@ -36,7 +36,6 @@
 #include "huffman.h"
 #include "bytestream.h"
 #include "dsputil.h"
-#include "internal.h"
 #include "thread.h"
 
 #define FPS_TAG MKTAG('F', 'P', 'S', 'x')
@@ -62,15 +61,8 @@ static av_cold int decode_init(AVCodecContext *avctx)
 {
     FrapsContext * const s = avctx->priv_data;
 
-<<<<<<< HEAD
     avcodec_get_frame_defaults(&s->frame);
     avctx->coded_frame = &s->frame;
-||||||| merged common ancestors
-    avctx->coded_frame = &s->frame;
-    avctx->pix_fmt     = AV_PIX_FMT_NONE; /* set in decode_frame */
-=======
-    avctx->pix_fmt     = AV_PIX_FMT_NONE; /* set in decode_frame */
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
     s->avctx  = avctx;
     s->tmpbuf = NULL;
@@ -217,7 +209,7 @@ static int decode_frame(AVCodecContext *avctx,
 
     pix_fmt = version & 1 ? AV_PIX_FMT_BGR24 : AV_PIX_FMT_YUVJ420P;
     if (avctx->pix_fmt != pix_fmt && f->data[0]) {
-        av_frame_unref(f);
+        avctx->release_buffer(avctx, f);
     }
     avctx->pix_fmt = pix_fmt;
 
@@ -236,7 +228,6 @@ static int decode_frame(AVCodecContext *avctx,
             return AVERROR_INVALIDDATA;
         }
 
-<<<<<<< HEAD
         buf32 = (const uint32_t*)buf;
         for (y = 0; y < avctx->height / 2; y++) {
             luma1 = (uint32_t*)&f->data[0][  y * 2      * f->linesize[0] ];
@@ -250,107 +241,12 @@ static int decode_frame(AVCodecContext *avctx,
                 *luma2++ = *buf32++;
                 *cr++    = *buf32++;
                 *cb++    = *buf32++;
-||||||| merged common ancestors
-        f->reference = 1;
-        f->buffer_hints = FF_BUFFER_HINTS_VALID |
-                          FF_BUFFER_HINTS_PRESERVE |
-                          FF_BUFFER_HINTS_REUSABLE;
-        if ((ret = avctx->reget_buffer(avctx, f)) < 0) {
-            av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
-            return ret;
-        }
-        /* bit 31 means same as previous pic */
-        f->pict_type = (header & (1U << 31)) ? AV_PICTURE_TYPE_P : AV_PICTURE_TYPE_I;
-        f->key_frame = f->pict_type == AV_PICTURE_TYPE_I;
-
-        if (f->pict_type == AV_PICTURE_TYPE_I) {
-            buf32 = (const uint32_t*)buf;
-            for (y = 0; y < avctx->height / 2; y++) {
-                luma1 = (uint32_t*)&f->data[0][ y * 2      * f->linesize[0]];
-                luma2 = (uint32_t*)&f->data[0][(y * 2 + 1) * f->linesize[0]];
-                cr    = (uint32_t*)&f->data[1][ y          * f->linesize[1]];
-                cb    = (uint32_t*)&f->data[2][ y          * f->linesize[2]];
-                for (x = 0; x < avctx->width; x += 8) {
-                    *(luma1++) = *(buf32++);
-                    *(luma1++) = *(buf32++);
-                    *(luma2++) = *(buf32++);
-                    *(luma2++) = *(buf32++);
-                    *(cr++) = *(buf32++);
-                    *(cb++) = *(buf32++);
-                }
-=======
-        if ((ret = ff_reget_buffer(avctx, f)) < 0) {
-            av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
-            return ret;
-        }
-        /* bit 31 means same as previous pic */
-        f->pict_type = (header & (1U << 31)) ? AV_PICTURE_TYPE_P : AV_PICTURE_TYPE_I;
-        f->key_frame = f->pict_type == AV_PICTURE_TYPE_I;
-
-        if (f->pict_type == AV_PICTURE_TYPE_I) {
-            buf32 = (const uint32_t*)buf;
-            for (y = 0; y < avctx->height / 2; y++) {
-                luma1 = (uint32_t*)&f->data[0][ y * 2      * f->linesize[0]];
-                luma2 = (uint32_t*)&f->data[0][(y * 2 + 1) * f->linesize[0]];
-                cr    = (uint32_t*)&f->data[1][ y          * f->linesize[1]];
-                cb    = (uint32_t*)&f->data[2][ y          * f->linesize[2]];
-                for (x = 0; x < avctx->width; x += 8) {
-                    *(luma1++) = *(buf32++);
-                    *(luma1++) = *(buf32++);
-                    *(luma2++) = *(buf32++);
-                    *(luma2++) = *(buf32++);
-                    *(cr++) = *(buf32++);
-                    *(cb++) = *(buf32++);
-                }
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
             }
         }
         break;
 
     case 1:
         /* Fraps v1 is an upside-down BGR24 */
-<<<<<<< HEAD
-||||||| merged common ancestors
-        if ((buf_size != avctx->width * avctx->height * 3 + header_size) &&
-            (buf_size != header_size) ) {
-            av_log(avctx, AV_LOG_ERROR,
-                   "Invalid frame length %d (should be %d)\n",
-                   buf_size, avctx->width * avctx->height * 3 + header_size);
-            return AVERROR_INVALIDDATA;
-        }
-
-        f->reference = 1;
-        f->buffer_hints = FF_BUFFER_HINTS_VALID |
-                          FF_BUFFER_HINTS_PRESERVE |
-                          FF_BUFFER_HINTS_REUSABLE;
-        if ((ret = avctx->reget_buffer(avctx, f)) < 0) {
-            av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
-            return ret;
-        }
-        /* bit 31 means same as previous pic */
-        f->pict_type = (header & (1U<<31))? AV_PICTURE_TYPE_P : AV_PICTURE_TYPE_I;
-        f->key_frame = f->pict_type == AV_PICTURE_TYPE_I;
-
-        if (f->pict_type == AV_PICTURE_TYPE_I) {
-=======
-        if ((buf_size != avctx->width * avctx->height * 3 + header_size) &&
-            (buf_size != header_size) ) {
-            av_log(avctx, AV_LOG_ERROR,
-                   "Invalid frame length %d (should be %d)\n",
-                   buf_size, avctx->width * avctx->height * 3 + header_size);
-            return AVERROR_INVALIDDATA;
-        }
-
-        if ((ret = ff_reget_buffer(avctx, f)) < 0) {
-            av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
-            return ret;
-        }
-        /* bit 31 means same as previous pic */
-        f->pict_type = (header & (1U<<31))? AV_PICTURE_TYPE_P : AV_PICTURE_TYPE_I;
-        f->key_frame = f->pict_type == AV_PICTURE_TYPE_I;
-
-        if (f->pict_type == AV_PICTURE_TYPE_I) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
             for (y = 0; y<avctx->height; y++)
                 memcpy(&f->data[0][(avctx->height - y - 1) * f->linesize[0]],
                        &buf[y * avctx->width * 3],
@@ -363,64 +259,6 @@ static int decode_frame(AVCodecContext *avctx,
          * Fraps v2 is Huffman-coded YUV420 planes
          * Fraps v4 is virtually the same
          */
-<<<<<<< HEAD
-||||||| merged common ancestors
-        planes = 3;
-        f->reference = 1;
-        f->buffer_hints = FF_BUFFER_HINTS_VALID |
-                          FF_BUFFER_HINTS_PRESERVE |
-                          FF_BUFFER_HINTS_REUSABLE;
-        if ((ret = avctx->reget_buffer(avctx, f)) < 0) {
-            av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
-            return ret;
-        }
-        /* skip frame */
-        if (buf_size == 8) {
-            f->pict_type = AV_PICTURE_TYPE_P;
-            f->key_frame = 0;
-            break;
-        }
-        f->pict_type = AV_PICTURE_TYPE_I;
-        f->key_frame = 1;
-        if ((AV_RL32(buf) != FPS_TAG) || (buf_size < (planes * 1024 + 24))) {
-            av_log(avctx, AV_LOG_ERROR, "Fraps: error in data stream\n");
-            return AVERROR_INVALIDDATA;
-        }
-        for (i = 0; i < planes; i++) {
-            offs[i] = AV_RL32(buf + 4 + i * 4);
-            if (offs[i] >= buf_size || (i && offs[i] <= offs[i - 1] + 1024)) {
-                av_log(avctx, AV_LOG_ERROR, "Fraps: plane %i offset is out of bounds\n", i);
-                return AVERROR_INVALIDDATA;
-            }
-        }
-        offs[planes] = buf_size;
-=======
-        planes = 3;
-        if ((ret = ff_reget_buffer(avctx, f)) < 0) {
-            av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
-            return ret;
-        }
-        /* skip frame */
-        if (buf_size == 8) {
-            f->pict_type = AV_PICTURE_TYPE_P;
-            f->key_frame = 0;
-            break;
-        }
-        f->pict_type = AV_PICTURE_TYPE_I;
-        f->key_frame = 1;
-        if ((AV_RL32(buf) != FPS_TAG) || (buf_size < (planes * 1024 + 24))) {
-            av_log(avctx, AV_LOG_ERROR, "Fraps: error in data stream\n");
-            return AVERROR_INVALIDDATA;
-        }
-        for (i = 0; i < planes; i++) {
-            offs[i] = AV_RL32(buf + 4 + i * 4);
-            if (offs[i] >= buf_size || (i && offs[i] <= offs[i - 1] + 1024)) {
-                av_log(avctx, AV_LOG_ERROR, "Fraps: plane %i offset is out of bounds\n", i);
-                return AVERROR_INVALIDDATA;
-            }
-        }
-        offs[planes] = buf_size;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         for (i = 0; i < planes; i++) {
             is_chroma = !!i;
             if ((ret = fraps2_decode_plane(s, f->data[i], f->linesize[i],
@@ -436,48 +274,6 @@ static int decode_frame(AVCodecContext *avctx,
     case 3:
     case 5:
         /* Virtually the same as version 4, but is for RGB24 */
-<<<<<<< HEAD
-||||||| merged common ancestors
-        planes = 3;
-        f->reference = 1;
-        f->buffer_hints = FF_BUFFER_HINTS_VALID |
-                          FF_BUFFER_HINTS_PRESERVE |
-                          FF_BUFFER_HINTS_REUSABLE;
-        if ((ret = avctx->reget_buffer(avctx, f)) < 0) {
-            av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
-            return ret;
-        }
-        /* skip frame */
-        if (buf_size == 8) {
-            f->pict_type = AV_PICTURE_TYPE_P;
-            f->key_frame = 0;
-            break;
-        }
-        f->pict_type = AV_PICTURE_TYPE_I;
-        f->key_frame = 1;
-        if ((AV_RL32(buf) != FPS_TAG)||(buf_size < (planes*1024 + 24))) {
-            av_log(avctx, AV_LOG_ERROR, "Fraps: error in data stream\n");
-            return AVERROR_INVALIDDATA;
-        }
-=======
-        planes = 3;
-        if ((ret = ff_reget_buffer(avctx, f)) < 0) {
-            av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
-            return ret;
-        }
-        /* skip frame */
-        if (buf_size == 8) {
-            f->pict_type = AV_PICTURE_TYPE_P;
-            f->key_frame = 0;
-            break;
-        }
-        f->pict_type = AV_PICTURE_TYPE_I;
-        f->key_frame = 1;
-        if ((AV_RL32(buf) != FPS_TAG)||(buf_size < (planes*1024 + 24))) {
-            av_log(avctx, AV_LOG_ERROR, "Fraps: error in data stream\n");
-            return AVERROR_INVALIDDATA;
-        }
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         for (i = 0; i < planes; i++) {
             if ((ret = fraps2_decode_plane(s, f->data[0] + i + (f->linesize[0] * (avctx->height - 1)),
                                            -f->linesize[0], avctx->width, avctx->height,
@@ -500,8 +296,7 @@ static int decode_frame(AVCodecContext *avctx,
         break;
     }
 
-    if ((ret = av_frame_ref(frame, f)) < 0)
-        return ret;
+    *frame = *f;
     *got_frame = 1;
 
     return buf_size;
@@ -517,7 +312,8 @@ static av_cold int decode_end(AVCodecContext *avctx)
 {
     FrapsContext *s = (FrapsContext*)avctx->priv_data;
 
-    av_frame_unref(&s->frame);
+    if (s->frame.data[0])
+        avctx->release_buffer(avctx, &s->frame);
 
     av_freep(&s->tmpbuf);
     return 0;
