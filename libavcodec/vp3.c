@@ -289,18 +289,14 @@ static av_cold int vp3_decode_end(AVCodecContext *avctx)
     av_freep(&s->motion_val[1]);
     av_freep(&s->edge_emu_buffer);
 
-<<<<<<< HEAD
     s->theora_tables = 0;
 
-||||||| merged common ancestors
-=======
     /* release all frames */
     vp3_decode_flush(avctx);
     av_frame_free(&s->current_frame.f);
     av_frame_free(&s->last_frame.f);
     av_frame_free(&s->golden_frame.f);
 
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     if (avctx->internal->is_copy)
         return 0;
 
@@ -1902,13 +1898,7 @@ static int vp3_update_thread_context(AVCodecContext *dst, const AVCodecContext *
         ||s->width != s1->width
         ||s->height!= s1->height) {
         if (s != s1)
-<<<<<<< HEAD
-            copy_fields(s, s1, golden_frame, keyframe);
-||||||| merged common ancestors
-            copy_fields(s, s1, golden_frame, current_frame);
-=======
             ref_frames(s, s1);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         return -1;
     }
 
@@ -1927,16 +1917,10 @@ static int vp3_update_thread_context(AVCodecContext *dst, const AVCodecContext *
         }
 
         // copy previous frame data
-<<<<<<< HEAD
-        copy_fields(s, s1, golden_frame, idct_permutation);
-||||||| merged common ancestors
-        copy_fields(s, s1, golden_frame, dsp);
-=======
         if ((err = ref_frames(s, s1)) < 0)
             return err;
 
         s->keyframe = s1->keyframe;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
         // copy qscale data if necessary
         for (i = 0; i < 3; i++) {
@@ -1965,14 +1949,7 @@ static int vp3_decode_frame(AVCodecContext *avctx,
     int buf_size = avpkt->size;
     Vp3DecodeContext *s = avctx->priv_data;
     GetBitContext gb;
-<<<<<<< HEAD
-    int i;
-    int ret;
-||||||| merged common ancestors
-    int i;
-=======
     int i, ret;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
     init_get_bits(&gb, buf, buf_size * 8);
 
@@ -2045,19 +2022,9 @@ static int vp3_decode_frame(AVCodecContext *avctx,
     if (avctx->skip_frame >= AVDISCARD_NONKEY && !s->keyframe)
         return buf_size;
 
-<<<<<<< HEAD
-    s->current_frame.reference = 3;
-    s->current_frame.pict_type = s->keyframe ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_P;
-    s->current_frame.key_frame = s->keyframe;
-    if (ff_thread_get_buffer(avctx, &s->current_frame) < 0) {
-||||||| merged common ancestors
-    s->current_frame.reference = 3;
-    s->current_frame.pict_type = s->keyframe ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_P;
-    if (ff_thread_get_buffer(avctx, &s->current_frame) < 0) {
-=======
     s->current_frame.f->pict_type = s->keyframe ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_P;
+    s->current_frame.f->key_frame = s->keyframe;
     if (ff_thread_get_buffer(avctx, &s->current_frame, AV_GET_BUFFER_FLAG_REF) < 0) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(s->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         goto error;
     }
