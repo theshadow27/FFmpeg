@@ -210,16 +210,8 @@ static int dpcm_decode_frame(AVCodecContext *avctx, void *data,
     }
 
     /* get output buffer */
-<<<<<<< HEAD
     frame->nb_samples = (out + avctx->channels - 1) / avctx->channels;
-    if ((ret = ff_get_buffer(avctx, frame)) < 0) {
-||||||| merged common ancestors
-    frame->nb_samples = out / avctx->channels;
-    if ((ret = ff_get_buffer(avctx, frame)) < 0) {
-=======
-    frame->nb_samples = out / avctx->channels;
     if ((ret = ff_get_buffer(avctx, frame, 0)) < 0) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
