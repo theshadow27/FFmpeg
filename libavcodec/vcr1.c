@@ -33,29 +33,6 @@ typedef struct VCR1Context {
     int offset[4];
 } VCR1Context;
 
-<<<<<<< HEAD
-static av_cold int vcr1_common_init(AVCodecContext *avctx)
-{
-    VCR1Context *const a = avctx->priv_data;
-
-    avctx->coded_frame = &a->picture;
-    avcodec_get_frame_defaults(&a->picture);
-
-    return 0;
-}
-
-||||||| merged common ancestors
-static av_cold int vcr1_common_init(AVCodecContext *avctx)
-{
-    VCR1Context *const a = avctx->priv_data;
-
-    avctx->coded_frame = &a->picture;
-
-    return 0;
-}
-
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 static av_cold int vcr1_decode_init(AVCodecContext *avctx)
 {
     avctx->pix_fmt = AV_PIX_FMT_YUV410P;
@@ -77,26 +54,12 @@ static int vcr1_decode_frame(AVCodecContext *avctx, void *data,
     const uint8_t *bytestream = buf;
     int i, x, y, ret;
 
-<<<<<<< HEAD
-    if (p->data[0])
-        avctx->release_buffer(avctx, p);
-
     if(buf_size < 16 + avctx->height + avctx->width*avctx->height*5/8){
         av_log(avctx, AV_LOG_ERROR, "Insufficient input data.\n");
         return AVERROR(EINVAL);
     }
 
-    p->reference = 0;
-    if ((ret = ff_get_buffer(avctx, p)) < 0) {
-||||||| merged common ancestors
-    if (p->data[0])
-        avctx->release_buffer(avctx, p);
-
-    p->reference = 0;
-    if ((ret = ff_get_buffer(avctx, p)) < 0) {
-=======
     if ((ret = ff_get_buffer(avctx, p, 0)) < 0) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
