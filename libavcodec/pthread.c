@@ -87,16 +87,6 @@ typedef struct ThreadContext {
     int done;
 } ThreadContext;
 
-<<<<<<< HEAD
-/// Max number of frame buffers that can be allocated when using frame threads.
-#define MAX_BUFFERS (34+1)
-
-||||||| merged common ancestors
-/// Max number of frame buffers that can be allocated when using frame threads.
-#define MAX_BUFFERS (32+1)
-
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 /**
  * Context used by codec threads and stored in their AVCodecContext thread_opaque.
  */
@@ -136,29 +126,9 @@ typedef struct PerThreadContext {
      * Array of frames passed to ff_thread_release_buffer().
      * Frames are released after all threads referencing them are finished.
      */
-<<<<<<< HEAD
-    AVFrame released_buffers[MAX_BUFFERS];
-    int     num_released_buffers;
-
-    /**
-     * Array of progress values used by ff_thread_get_buffer().
-     */
-    volatile int     progress[MAX_BUFFERS][2];
-    volatile uint8_t progress_used[MAX_BUFFERS];
-||||||| merged common ancestors
-    AVFrame released_buffers[MAX_BUFFERS];
-    int     num_released_buffers;
-
-    /**
-     * Array of progress values used by ff_thread_get_buffer().
-     */
-    int     progress[MAX_BUFFERS][2];
-    uint8_t progress_used[MAX_BUFFERS];
-=======
     AVFrame *released_buffers;
     int  num_released_buffers;
     int      released_buffers_allocated;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
     AVFrame *requested_frame;       ///< AVFrame the codec passed to get_buffer()
     int      requested_flags;       ///< flags passed to get_buffer() for requested_frame
@@ -421,11 +391,13 @@ static attribute_align_arg void *frame_worker_thread(void *arg)
         if (p->state == STATE_SETTING_UP) ff_thread_finish_setup(avctx);
 
         pthread_mutex_lock(&p->progress_mutex);
+#if 0 //BUFREF-FIXME
         for (i = 0; i < MAX_BUFFERS; i++)
             if (p->progress_used[i] && (p->got_frame || p->result<0 || avctx->codec_id != AV_CODEC_ID_H264)) {
                 p->progress[i][0] = INT_MAX;
                 p->progress[i][1] = INT_MAX;
             }
+#endif
         p->state = STATE_INPUT_READY;
 
         pthread_cond_broadcast(&p->progress_cond);
@@ -538,26 +510,6 @@ static int update_context_from_user(AVCodecContext *dst, AVCodecContext *src)
 #undef copy_fields
 }
 
-<<<<<<< HEAD
-static void free_progress(AVFrame *f)
-{
-    PerThreadContext *p = f->owner->thread_opaque;
-    volatile int *progress = f->thread_opaque;
-
-    p->progress_used[(progress - p->progress[0]) / 2] = 0;
-}
-
-||||||| merged common ancestors
-static void free_progress(AVFrame *f)
-{
-    PerThreadContext *p = f->owner->thread_opaque;
-    int *progress = f->thread_opaque;
-
-    p->progress_used[(progress - p->progress[0]) / 2] = 0;
-}
-
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 /// Releases the buffers that this decoding thread was the last user of.
 static void release_delayed_buffers(PerThreadContext *p)
 {
@@ -728,13 +680,7 @@ int ff_thread_decode_frame(AVCodecContext *avctx,
 void ff_thread_report_progress(ThreadFrame *f, int n, int field)
 {
     PerThreadContext *p;
-<<<<<<< HEAD
-    volatile int *progress = f->thread_opaque;
-||||||| merged common ancestors
-    int *progress = f->thread_opaque;
-=======
-    int *progress = f->progress ? (int*)f->progress->data : NULL;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+    volatile int *progress = f->progress ? (int*)f->progress->data : NULL;
 
     if (!progress || progress[field] >= n) return;
 
@@ -752,13 +698,7 @@ void ff_thread_report_progress(ThreadFrame *f, int n, int field)
 void ff_thread_await_progress(ThreadFrame *f, int n, int field)
 {
     PerThreadContext *p;
-<<<<<<< HEAD
-    volatile int *progress = f->thread_opaque;
-||||||| merged common ancestors
-    int *progress = f->thread_opaque;
-=======
-    int *progress = f->progress ? (int*)f->progress->data : NULL;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+    volatile int *progress = f->progress ? (int*)f->progress->data : NULL;
 
     if (!progress || progress[field] >= n) return;
 
@@ -989,24 +929,6 @@ void ff_thread_flush(AVCodecContext *avctx)
     }
 }
 
-<<<<<<< HEAD
-static volatile int *allocate_progress(PerThreadContext *p)
-{
-    int i;
-
-    for (i = 0; i < MAX_BUFFERS; i++)
-        if (!p->progress_used[i]) break;
-
-    if (i == MAX_BUFFERS) {
-        av_log(p->avctx, AV_LOG_ERROR, "allocate_progress() overflow\n");
-        return NULL;
-    }
-
-    p->progress_used[i] = 1;
-
-    return p->progress[i];
-}
-
 int ff_thread_can_start_frame(AVCodecContext *avctx)
 {
     PerThreadContext *p = avctx->thread_opaque;
@@ -1018,58 +940,17 @@ int ff_thread_can_start_frame(AVCodecContext *avctx)
     return 1;
 }
 
-int ff_thread_get_buffer(AVCodecContext *avctx, AVFrame *f)
-||||||| merged common ancestors
-static int *allocate_progress(PerThreadContext *p)
-{
-    int i;
-
-    for (i = 0; i < MAX_BUFFERS; i++)
-        if (!p->progress_used[i]) break;
-
-    if (i == MAX_BUFFERS) {
-        av_log(p->avctx, AV_LOG_ERROR, "allocate_progress() overflow\n");
-        return NULL;
-    }
-
-    p->progress_used[i] = 1;
-
-    return p->progress[i];
-}
-
-int ff_thread_get_buffer(AVCodecContext *avctx, AVFrame *f)
-=======
 int ff_thread_get_buffer(AVCodecContext *avctx, ThreadFrame *f, int flags)
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 {
     PerThreadContext *p = avctx->thread_opaque;
-<<<<<<< HEAD
     int err;
-    volatile int *progress;
-||||||| merged common ancestors
-    int *progress, err;
-=======
-    int err;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
     f->owner = avctx;
 
-<<<<<<< HEAD
-    ff_init_buffer_info(avctx, f);
+    ff_init_buffer_info(avctx, f->f);
 
-    if (!(avctx->active_thread_type&FF_THREAD_FRAME)) {
-        f->thread_opaque = NULL;
-        return ff_get_buffer(avctx, f);
-    }
-||||||| merged common ancestors
-    if (!(avctx->active_thread_type&FF_THREAD_FRAME)) {
-        f->thread_opaque = NULL;
-        return ff_get_buffer(avctx, f);
-    }
-=======
     if (!(avctx->active_thread_type & FF_THREAD_FRAME))
         return ff_get_buffer(avctx, f->f, flags);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
     if (p->state != STATE_SETTING_UP &&
         (avctx->codec->update_thread_context || (!avctx->thread_safe_callbacks &&
@@ -1090,52 +971,17 @@ int ff_thread_get_buffer(AVCodecContext *avctx, ThreadFrame *f, int flags)
     }
 
     pthread_mutex_lock(&p->parent->buffer_mutex);
-<<<<<<< HEAD
-    f->thread_opaque = (int*)(progress = allocate_progress(p));
 
-    if (!progress) {
-        pthread_mutex_unlock(&p->parent->buffer_mutex);
-        return -1;
-    }
-
-    progress[0] =
-    progress[1] = -1;
-
-    if (avctx->thread_safe_callbacks ||
-        avctx->get_buffer == avcodec_default_get_buffer) {
-        err = ff_get_buffer(avctx, f);
-||||||| merged common ancestors
-    f->thread_opaque = progress = allocate_progress(p);
-
-    if (!progress) {
-        pthread_mutex_unlock(&p->parent->buffer_mutex);
-        return -1;
-    }
-
-    progress[0] =
-    progress[1] = -1;
-
-    if (avctx->thread_safe_callbacks ||
-        avctx->get_buffer == avcodec_default_get_buffer) {
-        err = ff_get_buffer(avctx, f);
-=======
     if (avctx->thread_safe_callbacks || (
 #if FF_API_GET_BUFFER
         !avctx->get_buffer &&
 #endif
         avctx->get_buffer2 == avcodec_default_get_buffer2)) {
         err = ff_get_buffer(avctx, f->f, flags);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     } else {
-<<<<<<< HEAD
         pthread_mutex_lock(&p->progress_mutex);
-        p->requested_frame = f;
-||||||| merged common ancestors
-        p->requested_frame = f;
-=======
         p->requested_frame = f->f;
         p->requested_flags = flags;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         p->state = STATE_GET_BUFFER;
         pthread_cond_broadcast(&p->progress_cond);
 
