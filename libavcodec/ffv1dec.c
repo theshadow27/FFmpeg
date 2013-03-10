@@ -325,20 +325,8 @@ static int decode_slice(AVCodecContext *c, void *arg)
     FFV1Context *fs   = *(void **)arg;
     FFV1Context *f    = fs->avctx->priv_data;
     int width, height, x, y, ret;
-<<<<<<< HEAD
     const int ps      = av_pix_fmt_desc_get(c->pix_fmt)->comp[0].step_minus1 + 1;
-    AVFrame * const p = &f->picture;
-||||||| merged common ancestors
-    const int ps = (av_pix_fmt_desc_get(c->pix_fmt)->flags & PIX_FMT_PLANAR)
-                   ? (c->bits_per_raw_sample > 8) + 1
-                   : 4;
-    AVFrame *const p = &f->picture;
-=======
-    const int ps = (av_pix_fmt_desc_get(c->pix_fmt)->flags & PIX_FMT_PLANAR)
-                   ? (c->bits_per_raw_sample > 8) + 1
-                   : 4;
-    AVFrame *const p = f->cur;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+    AVFrame * const p = f->cur;
 
     if (f->version > 2) {
         if (ffv1_init_slice_state(f, fs) < 0)
