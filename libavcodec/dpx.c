@@ -59,20 +59,8 @@ static int decode_frame(AVCodecContext *avctx,
 {
     const uint8_t *buf = avpkt->data;
     int buf_size       = avpkt->size;
-<<<<<<< HEAD
-    DPXContext *const s = avctx->priv_data;
-    AVFrame *picture  = data;
-    AVFrame *const p = &s->picture;
-    uint8_t *ptr[AV_NUM_DATA_POINTERS];
-||||||| merged common ancestors
-    DPXContext *const s = avctx->priv_data;
-    AVFrame *picture  = data;
-    AVFrame *const p = &s->picture;
-    uint8_t *ptr;
-=======
     AVFrame *const p = data;
-    uint8_t *ptr;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+    uint8_t *ptr[AV_NUM_DATA_POINTERS];
 
     unsigned int offset;
     int magic_num, endian;
@@ -191,25 +179,7 @@ static int decode_frame(AVCodecContext *avctx,
             return AVERROR_INVALIDDATA;
     }
 
-<<<<<<< HEAD
-    if (s->picture.data[0])
-        avctx->release_buffer(avctx, &s->picture);
-    if ((ret = ff_get_buffer(avctx, p)) < 0) {
-||||||| merged common ancestors
-    if (s->picture.data[0])
-        avctx->release_buffer(avctx, &s->picture);
-    if ((ret = av_image_check_size(w, h, 0, avctx)) < 0)
-        return ret;
-    if (w != avctx->width || h != avctx->height)
-        avcodec_set_dimensions(avctx, w, h);
-    if ((ret = ff_get_buffer(avctx, p)) < 0) {
-=======
-    if ((ret = av_image_check_size(w, h, 0, avctx)) < 0)
-        return ret;
-    if (w != avctx->width || h != avctx->height)
-        avcodec_set_dimensions(avctx, w, h);
     if ((ret = ff_get_buffer(avctx, p, 0)) < 0) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
