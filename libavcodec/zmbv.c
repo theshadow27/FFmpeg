@@ -408,28 +408,6 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame, AVPac
     int len = buf_size;
     int hi_ver, lo_ver, ret;
 
-<<<<<<< HEAD
-    if (c->pic.data[0])
-            avctx->release_buffer(avctx, &c->pic);
-
-||||||| merged common ancestors
-    if (c->pic.data[0])
-            avctx->release_buffer(avctx, &c->pic);
-
-    c->pic.reference = 1;
-    c->pic.buffer_hints = FF_BUFFER_HINTS_VALID;
-    if ((ret = ff_get_buffer(avctx, &c->pic)) < 0) {
-        av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
-        return ret;
-    }
-
-=======
-    if ((ret = ff_get_buffer(avctx, frame, 0)) < 0) {
-        av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
-        return ret;
-    }
-
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     /* parse header */
     c->flags = buf[0];
     buf++; len--;
@@ -530,9 +508,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame, AVPac
         return AVERROR_INVALIDDATA;
     }
 
-    c->pic.reference = 3;
-    c->pic.buffer_hints = FF_BUFFER_HINTS_VALID;
-    if ((ret = ff_get_buffer(avctx, &c->pic)) < 0) {
+    if ((ret = ff_get_buffer(avctx, frame, 0)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
@@ -576,128 +552,18 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame, AVPac
         src = c->cur;
         switch (c->fmt) {
         case ZMBV_FMT_8BPP:
-<<<<<<< HEAD
             for (j = 0; j < 256; j++)
-                AV_WN32(&c->pic.data[1][j * 4], 0xFFU << 24 | AV_RB24(&c->pal[j * 3]));
-||||||| merged common ancestors
-            for (j = 0; j < c->height; j++) {
-                for (i = 0; i < c->width; i++) {
-                    out[i * 3 + 0] = c->pal[(*src) * 3 + 0];
-                    out[i * 3 + 1] = c->pal[(*src) * 3 + 1];
-                    out[i * 3 + 2] = c->pal[(*src) * 3 + 2];
-                    src++;
-                }
-                out += c->pic.linesize[0];
-            }
-            break;
-=======
-            for (j = 0; j < c->height; j++) {
-                for (i = 0; i < c->width; i++) {
-                    out[i * 3 + 0] = c->pal[(*src) * 3 + 0];
-                    out[i * 3 + 1] = c->pal[(*src) * 3 + 1];
-                    out[i * 3 + 2] = c->pal[(*src) * 3 + 2];
-                    src++;
-                }
-                out += frame->linesize[0];
-            }
-            break;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+                AV_WN32(&frame->data[1][j * 4], 0xFFU << 24 | AV_RB24(&c->pal[j * 3]));
         case ZMBV_FMT_15BPP:
-<<<<<<< HEAD
-||||||| merged common ancestors
-            for (j = 0; j < c->height; j++) {
-                for (i = 0; i < c->width; i++) {
-                    uint16_t tmp = AV_RL16(src);
-                    src += 2;
-                    out[i * 3 + 0] = (tmp & 0x7C00) >> 7;
-                    out[i * 3 + 1] = (tmp & 0x03E0) >> 2;
-                    out[i * 3 + 2] = (tmp & 0x001F) << 3;
-                }
-                out += c->pic.linesize[0];
-            }
-            break;
-=======
-            for (j = 0; j < c->height; j++) {
-                for (i = 0; i < c->width; i++) {
-                    uint16_t tmp = AV_RL16(src);
-                    src += 2;
-                    out[i * 3 + 0] = (tmp & 0x7C00) >> 7;
-                    out[i * 3 + 1] = (tmp & 0x03E0) >> 2;
-                    out[i * 3 + 2] = (tmp & 0x001F) << 3;
-                }
-                out += frame->linesize[0];
-            }
-            break;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         case ZMBV_FMT_16BPP:
-<<<<<<< HEAD
-||||||| merged common ancestors
-            for (j = 0; j < c->height; j++) {
-                for (i = 0; i < c->width; i++) {
-                    uint16_t tmp = AV_RL16(src);
-                    src += 2;
-                    out[i * 3 + 0] = (tmp & 0xF800) >> 8;
-                    out[i * 3 + 1] = (tmp & 0x07E0) >> 3;
-                    out[i * 3 + 2] = (tmp & 0x001F) << 3;
-                }
-                out += c->pic.linesize[0];
-            }
-            break;
-=======
-            for (j = 0; j < c->height; j++) {
-                for (i = 0; i < c->width; i++) {
-                    uint16_t tmp = AV_RL16(src);
-                    src += 2;
-                    out[i * 3 + 0] = (tmp & 0xF800) >> 8;
-                    out[i * 3 + 1] = (tmp & 0x07E0) >> 3;
-                    out[i * 3 + 2] = (tmp & 0x001F) << 3;
-                }
-                out += frame->linesize[0];
-            }
-            break;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 #ifdef ZMBV_ENABLE_24BPP
         case ZMBV_FMT_24BPP:
-<<<<<<< HEAD
 #endif
-||||||| merged common ancestors
-            for (j = 0; j < c->height; j++) {
-                memcpy(out, src, c->width * 3);
-                src += c->width * 3;
-                out += c->pic.linesize[0];
-            }
-            break;
-#endif //ZMBV_ENABLE_24BPP
-=======
-            for (j = 0; j < c->height; j++) {
-                memcpy(out, src, c->width * 3);
-                src += c->width * 3;
-                out += frame->linesize[0];
-            }
-            break;
-#endif //ZMBV_ENABLE_24BPP
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         case ZMBV_FMT_32BPP:
             for (j = 0; j < c->height; j++) {
-<<<<<<< HEAD
                 memcpy(out, src, c->stride);
                 src += c->stride;
-                out += c->pic.linesize[0];
-||||||| merged common ancestors
-                for (i = 0; i < c->width; i++) {
-                    uint32_t tmp = AV_RL32(src);
-                    src += 4;
-                    AV_WB24(out+(i*3), tmp);
-                }
-                out += c->pic.linesize[0];
-=======
-                for (i = 0; i < c->width; i++) {
-                    uint32_t tmp = AV_RL32(src);
-                    src += 4;
-                    AV_WB24(out+(i*3), tmp);
-                }
                 out += frame->linesize[0];
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
             }
             break;
         default:
@@ -720,7 +586,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
     c->width = avctx->width;
     c->height = avctx->height;
-    avcodec_get_frame_defaults(&c->pic);
 
     c->bpp = avctx->bits_per_coded_sample;
 
