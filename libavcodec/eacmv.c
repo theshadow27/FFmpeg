@@ -44,9 +44,6 @@ typedef struct CmvContext {
 
 static av_cold int cmv_decode_init(AVCodecContext *avctx){
     CmvContext *s = avctx->priv_data;
-    avcodec_get_frame_defaults(&s->frame);
-    avcodec_get_frame_defaults(&s->last_frame);
-    avcodec_get_frame_defaults(&s->last2_frame);
 
     s->avctx = avctx;
     avctx->pix_fmt = AV_PIX_FMT_PAL8;
@@ -146,8 +143,8 @@ static void cmv_process_header(CmvContext *s, const uint8_t *buf, const uint8_t 
     s->height = AV_RL16(&buf[6]);
     if (s->avctx->width!=s->width || s->avctx->height!=s->height) {
         avcodec_set_dimensions(s->avctx, s->width, s->height);
-        av_frame_unref(s->frame);
         av_frame_unref(s->last_frame);
+        av_frame_unref(s->last2_frame);
     }
 
     s->avctx->time_base.num = 1;
