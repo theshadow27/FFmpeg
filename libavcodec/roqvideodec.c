@@ -180,15 +180,6 @@ static av_cold int roq_decode_init(AVCodecContext *avctx)
 
     s->width = avctx->width;
     s->height = avctx->height;
-<<<<<<< HEAD
-    avcodec_get_frame_defaults(&s->frames[0]);
-    avcodec_get_frame_defaults(&s->frames[1]);
-    s->last_frame    = &s->frames[0];
-    s->current_frame = &s->frames[1];
-||||||| merged common ancestors
-    s->last_frame    = &s->frames[0];
-    s->current_frame = &s->frames[1];
-=======
 
     s->last_frame    = av_frame_alloc();
     s->current_frame = av_frame_alloc();
@@ -198,7 +189,6 @@ static av_cold int roq_decode_init(AVCodecContext *avctx)
         return AVERROR(ENOMEM);
     }
 
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     avctx->pix_fmt = AV_PIX_FMT_YUV444P;
 
     return 0;
@@ -214,21 +204,9 @@ static int roq_decode_frame(AVCodecContext *avctx,
     int copy= !s->current_frame->data[0];
     int ret;
 
-<<<<<<< HEAD
-    s->current_frame->reference = 3;
-    if ((ret = avctx->reget_buffer(avctx, s->current_frame)) < 0) {
+    if ((ret = ff_reget_buffer(avctx, s->current_frame)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
         return ret;
-||||||| merged common ancestors
-    s->current_frame->reference = 3;
-    if (avctx->reget_buffer(avctx, s->current_frame)) {
-        av_log(avctx, AV_LOG_ERROR, "  RoQ: get_buffer() failed\n");
-        return -1;
-=======
-    if ((ret = ff_reget_buffer(avctx, s->current_frame)) < 0) {
-        av_log(avctx, AV_LOG_ERROR, "  RoQ: get_buffer() failed\n");
-        return ret;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     }
 
     if(copy)
