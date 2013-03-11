@@ -323,15 +323,7 @@ static void vmd_decode(VmdVideoContext *s, AVFrame *frame)
                     return;
                 memcpy(dp, pb, frame_width);
                 pb += frame_width;
-<<<<<<< HEAD
-                dp += s->frame.linesize[0];
-||||||| merged common ancestors
-                pb_size -= frame_width;
-                dp += s->frame.linesize[0];
-=======
-                pb_size -= frame_width;
                 dp += frame->linesize[0];
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
                 pp += s->prev_frame.linesize[0];
             }
             break;
@@ -412,7 +404,6 @@ static av_cold int vmdvideo_decode_init(AVCodecContext *avctx)
         palette32[i] = (r << 16) | (g << 8) | (b);
     }
 
-    avcodec_get_frame_defaults(&s->frame);
     avcodec_get_frame_defaults(&s->prev_frame);
 
     return 0;
@@ -434,21 +425,9 @@ static int vmdvideo_decode_frame(AVCodecContext *avctx,
     if (buf_size < 16)
         return buf_size;
 
-<<<<<<< HEAD
-    s->frame.reference = 3;
-    if (ff_get_buffer(avctx, &s->frame)) {
-        av_log(s->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
-        return -1;
-||||||| merged common ancestors
-    s->frame.reference = 1;
-    if (ff_get_buffer(avctx, &s->frame)) {
-        av_log(s->avctx, AV_LOG_ERROR, "VMD Video: get_buffer() failed\n");
-        return -1;
-=======
     if ((ret = ff_get_buffer(avctx, frame, AV_GET_BUFFER_FLAG_REF)) < 0) {
-        av_log(s->avctx, AV_LOG_ERROR, "VMD Video: get_buffer() failed\n");
+        av_log(s->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     }
 
     vmd_decode(s, frame);
