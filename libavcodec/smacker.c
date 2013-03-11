@@ -381,17 +381,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     if (avpkt->size <= 769)
         return AVERROR_INVALIDDATA;
 
-<<<<<<< HEAD
-    smk->pic.reference = 3;
-    smk->pic.buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
-    if((ret = avctx->reget_buffer(avctx, &smk->pic)) < 0){
-||||||| merged common ancestors
-    smk->pic.reference = 1;
-    smk->pic.buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
-    if(avctx->reget_buffer(avctx, &smk->pic) < 0){
-=======
     if ((ret = ff_reget_buffer(avctx, &smk->pic)) < 0) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
