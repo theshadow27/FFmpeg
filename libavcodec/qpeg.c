@@ -267,23 +267,11 @@ static int decode_frame(AVCodecContext *avctx,
     }
 
     bytestream2_init(&a->buffer, avpkt->data, avpkt->size);
-<<<<<<< HEAD
 
-    if(ref->data[0])
-        avctx->release_buffer(avctx, ref);
     FFSWAP(AVFrame, *ref, *p);
 
-    p->reference= 3;
-    if ((ret = ff_get_buffer(avctx, p)) < 0) {
+    if ((ret = ff_get_buffer(avctx, p, 0)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
-||||||| merged common ancestors
-    p->reference = 3;
-    if ((ret = avctx->reget_buffer(avctx, p)) < 0) {
-        av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
-=======
-    if ((ret = ff_reget_buffer(avctx, p)) < 0) {
-        av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         return ret;
     }
     outdata = a->pic.data[0];
@@ -343,17 +331,8 @@ static av_cold int decode_end(AVCodecContext *avctx){
     AVFrame * const p = &a->pic;
     AVFrame * const ref= &a->ref;
 
-<<<<<<< HEAD
-    if(p->data[0])
-        avctx->release_buffer(avctx, p);
-    if(ref->data[0])
-        avctx->release_buffer(avctx, ref);
-||||||| merged common ancestors
-    if(p->data[0])
-        avctx->release_buffer(avctx, p);
-=======
     av_frame_unref(p);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+    av_frame_unref(ref);
 
     return 0;
 }
