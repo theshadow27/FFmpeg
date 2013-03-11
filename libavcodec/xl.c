@@ -49,7 +49,6 @@ static int decode_frame(AVCodecContext *avctx,
     uint32_t val;
     int y0, y1, y2, y3 = 0, c0 = 0, c1 = 0;
 
-<<<<<<< HEAD
     if (avctx->width & 3) {
         av_log(avctx, AV_LOG_ERROR, "width is not a multiple of 4\n");
         return AVERROR_INVALIDDATA;
@@ -60,20 +59,7 @@ static int decode_frame(AVCodecContext *avctx,
         return AVERROR_INVALIDDATA;
     }
 
-    if (p->data[0])
-        avctx->release_buffer(avctx, p);
-
-    p->reference = 0;
-    if ((ret = ff_get_buffer(avctx, p)) < 0){
-||||||| merged common ancestors
-    if(p->data[0])
-        avctx->release_buffer(avctx, p);
-
-    p->reference = 0;
-    if ((ret = ff_get_buffer(avctx, p)) < 0){
-=======
-    if ((ret = ff_get_buffer(avctx, p, 0)) < 0){
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+    if ((ret = ff_get_buffer(avctx, p, 0)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
@@ -137,51 +123,13 @@ static int decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-<<<<<<< HEAD
 static av_cold int decode_init(AVCodecContext *avctx)
 {
-    VideoXLContext * const a = avctx->priv_data;
-
-    avcodec_get_frame_defaults(&a->pic);
     avctx->pix_fmt = AV_PIX_FMT_YUV411P;
-||||||| merged common ancestors
-static av_cold int decode_init(AVCodecContext *avctx){
-//    VideoXLContext * const a = avctx->priv_data;
-
-    avctx->pix_fmt= AV_PIX_FMT_YUV411P;
-=======
-static av_cold int decode_init(AVCodecContext *avctx){
-    avctx->pix_fmt= AV_PIX_FMT_YUV411P;
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
     return 0;
 }
 
-<<<<<<< HEAD
-static av_cold int decode_end(AVCodecContext *avctx)
-{
-    VideoXLContext * const a = avctx->priv_data;
-    AVFrame *pic = &a->pic;
-
-    if (pic->data[0])
-        avctx->release_buffer(avctx, pic);
-
-    return 0;
-}
-
-||||||| merged common ancestors
-static av_cold int decode_end(AVCodecContext *avctx){
-    VideoXLContext * const a = avctx->priv_data;
-    AVFrame *pic = &a->pic;
-
-    if (pic->data[0])
-        avctx->release_buffer(avctx, pic);
-
-    return 0;
-}
-
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 AVCodec ff_xl_decoder = {
     .name           = "xl",
     .type           = AVMEDIA_TYPE_VIDEO,
