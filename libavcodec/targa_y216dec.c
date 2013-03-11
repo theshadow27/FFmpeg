@@ -43,7 +43,7 @@ static int y216_decode_frame(AVCodecContext *avctx, void *data,
         return AVERROR(EINVAL);
     }
 
-    if (ff_get_buffer(avctx, pic ,0) < 0) {
+    if (ff_get_buffer(avctx, pic, 0) < 0) {
         av_log(avctx, AV_LOG_ERROR, "Could not allocate buffer.\n");
         return AVERROR(ENOMEM);
     }
