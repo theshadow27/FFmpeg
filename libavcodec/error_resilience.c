@@ -394,13 +394,13 @@ static void guess_mv(ERContext *s)
         fixed[mb_xy] = f;
         if (f == MV_FROZEN)
             num_avail++;
-        else if(s->last_pic->f.data[0] && s->last_pic->f.motion_val[0]){
+        else if(s->last_pic->f.data[0] && s->last_pic->motion_val[0]){
             const int mb_y= mb_xy / s->mb_stride;
             const int mb_x= mb_xy % s->mb_stride;
             const int mot_index= (mb_x + mb_y*mot_stride) * mot_step;
-            s->cur_pic->f.motion_val[0][mot_index][0]= s->last_pic->f.motion_val[0][mot_index][0];
-            s->cur_pic->f.motion_val[0][mot_index][1]= s->last_pic->f.motion_val[0][mot_index][1];
-            s->cur_pic->f.ref_index[0][4*mb_xy]      = s->last_pic->f.ref_index[0][4*mb_xy];
+            s->cur_pic->motion_val[0][mot_index][0]= s->last_pic->motion_val[0][mot_index][0];
+            s->cur_pic->motion_val[0][mot_index][1]= s->last_pic->motion_val[0][mot_index][1];
+            s->cur_pic->ref_index[0][4*mb_xy]      = s->last_pic->ref_index[0][4*mb_xy];
         }
     }
 
