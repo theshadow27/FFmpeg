@@ -970,11 +970,9 @@ static int ipvideo_decode_frame(AVCodecContext *avctx,
     if (buf_size < s->decoding_map_size)
         return buf_size;
 
-    if (s->last_frame.data[0] && av_packet_get_side_data(avpkt, AV_PKT_DATA_PARAM_CHANGE, NULL)) {
-        if (s->last_frame.data[0])
-            avctx->release_buffer(avctx, &s->last_frame);
-        if (s->second_last_frame.data[0])
-            avctx->release_buffer(avctx, &s->second_last_frame);
+    if (av_packet_get_side_data(avpkt, AV_PKT_DATA_PARAM_CHANGE, NULL)) {
+        av_frame_unref(s->last_frame);
+        av_frame_unref(s->second_last_frame);
     }
 
     s->decoding_map = buf;
