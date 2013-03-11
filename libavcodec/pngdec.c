@@ -753,7 +753,7 @@ static int decode_frame(AVCodecContext *avctx,
 
     if (s->bits_per_pixel == 1 && s->color_type == PNG_COLOR_TYPE_PALETTE){
         int i, j, k;
-        uint8_t *pd = s->current_picture->data[0];
+        uint8_t *pd = p->data[0];
         for (j = 0; j < s->height; j++) {
             i = s->width / 8;
             for (k = 7; k >= 1; k--)
@@ -774,7 +774,7 @@ static int decode_frame(AVCodecContext *avctx,
     }
     if (s->bits_per_pixel == 2){
         int i, j;
-        uint8_t *pd = s->current_picture->data[0];
+        uint8_t *pd = p->data[0];
         for (j = 0; j < s->height; j++) {
             i = s->width / 4;
             if (s->color_type == PNG_COLOR_TYPE_PALETTE){
@@ -803,7 +803,7 @@ static int decode_frame(AVCodecContext *avctx,
     }
     if (s->bits_per_pixel == 4){
         int i, j;
-        uint8_t *pd = s->current_picture->data[0];
+        uint8_t *pd = p->data[0];
         for (j = 0; j < s->height; j++) {
             i = s->width/2;
             if (s->color_type == PNG_COLOR_TYPE_PALETTE){
@@ -826,9 +826,9 @@ static int decode_frame(AVCodecContext *avctx,
      /* handle p-frames only if a predecessor frame is available */
      if (s->prev->data[0]) {
          if (   !(avpkt->flags & AV_PKT_FLAG_KEY)
-            && s->prev->width == s->current_picture->width
-            && s->prev->height== s->current_picture->height
-            && s->prev->format== s->current_picture->format
+            && s->prev->width == p->width
+            && s->prev->height== p->height
+            && s->prev->format== p->format
          ) {
             int i, j;
             uint8_t *pd      = p->data[0];
@@ -844,7 +844,7 @@ static int decode_frame(AVCodecContext *avctx,
         }
     }
 
-    av_frame_set_metadata(&s->current_picture, metadata);
+    av_frame_set_metadata(p, metadata);
     metadata   = NULL;
 
     av_frame_unref(s->prev);
