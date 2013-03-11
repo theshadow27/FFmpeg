@@ -115,7 +115,6 @@ AVCodec ff_avrp_decoder = {
     .type           = AVMEDIA_TYPE_VIDEO,
     .id             = AV_CODEC_ID_AVRP,
     .init           = decode_init,
-    .close          = decode_close,
     .decode         = decode_frame,
     .capabilities   = CODEC_CAP_DR1,
     .long_name = NULL_IF_CONFIG_SMALL("Avid 1:1 10-bit RGB Packer"),
