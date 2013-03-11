@@ -600,9 +600,6 @@ static av_cold int vp6_decode_init(AVCodecContext *avctx)
                             avctx->codec->id == AV_CODEC_ID_VP6A)) < 0)
         return ret;
 
-<<<<<<< HEAD
-    ff_vp56_init(avctx, avctx->codec->id == AV_CODEC_ID_VP6,
-                        avctx->codec->id == AV_CODEC_ID_VP6A);
     vp6_decode_init_context(s);
 
     if (s->has_alpha) {
@@ -612,8 +609,6 @@ static av_cold int vp6_decode_init(AVCodecContext *avctx)
         ff_vp56_init_context(avctx, s->alpha_context,
                              s->flip == -1, s->has_alpha);
         vp6_decode_init_context(s->alpha_context);
-        for (i = 0; i < 6; ++i)
-            s->alpha_context->framep[i] = s->framep[i];
     }
 
     return 0;
@@ -622,11 +617,6 @@ static av_cold int vp6_decode_init(AVCodecContext *avctx)
 static av_cold void vp6_decode_init_context(VP56Context *s)
 {
     s->deblock_filtering = 0;
-||||||| merged common ancestors
-    ff_vp56_init(avctx, avctx->codec->id == AV_CODEC_ID_VP6,
-                        avctx->codec->id == AV_CODEC_ID_VP6A);
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     s->vp56_coord_div = vp6_coord_div;
     s->parse_vector_adjustment = vp6_parse_vector_adjustment;
     s->filter = vp6_filter;

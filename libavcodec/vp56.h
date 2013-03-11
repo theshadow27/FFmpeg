@@ -182,7 +182,7 @@ struct vp56_context {
 
 
 int ff_vp56_init(AVCodecContext *avctx, int flip, int has_alpha);
-void ff_vp56_init_context(AVCodecContext *avctx, VP56Context *s,
+int ff_vp56_init_context(AVCodecContext *avctx, VP56Context *s,
                           int flip, int has_alpha);
 int ff_vp56_free(AVCodecContext *avctx);
 int ff_vp56_free_context(VP56Context *s);
