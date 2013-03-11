@@ -62,33 +62,17 @@ static int tmv_decode_frame(AVCodecContext *avctx, void *data,
     frame->key_frame = 1;
     dst              = frame->data[0];
 
-<<<<<<< HEAD
-    tmv->pic.palette_has_changed = 1;
-    memcpy(tmv->pic.data[1], ff_cga_palette, 16 * 4);
-    memset(tmv->pic.data[1] + 16 * 4, 0, AVPALETTE_SIZE - 16 * 4);
-||||||| merged common ancestors
-    tmv->pic.palette_has_changed = 1;
-    memcpy(tmv->pic.data[1], ff_cga_palette, 16 * 4);
-=======
     frame->palette_has_changed = 1;
     memcpy(frame->data[1], ff_cga_palette, 16 * 4);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+    memset(frame->data[1] + 16 * 4, 0, AVPALETTE_SIZE - 16 * 4);
 
     for (y = 0; y < char_rows; y++) {
         for (x = 0; x < char_cols; x++) {
             c  = *src++;
             bg = *src  >> 4;
             fg = *src++ & 0xF;
-<<<<<<< HEAD
-            ff_draw_pc_font(dst + x * 8, tmv->pic.linesize[0],
-                            avpriv_cga_font, 8, c, fg, bg);
-||||||| merged common ancestors
-            ff_draw_pc_font(dst + x * 8, tmv->pic.linesize[0],
-                            ff_cga_font, 8, c, fg, bg);
-=======
             ff_draw_pc_font(dst + x * 8, frame->linesize[0],
-                            ff_cga_font, 8, c, fg, bg);
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+                            avpriv_cga_font, 8, c, fg, bg);
         }
         dst += frame->linesize[0] * 8;
     }
@@ -100,9 +84,7 @@ static int tmv_decode_frame(AVCodecContext *avctx, void *data,
 
 static av_cold int tmv_decode_init(AVCodecContext *avctx)
 {
-    TMVContext *tmv = avctx->priv_data;
     avctx->pix_fmt = AV_PIX_FMT_PAL8;
-    avcodec_get_frame_defaults(&tmv->pic);
     return 0;
 }
 
