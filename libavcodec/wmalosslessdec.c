@@ -1264,8 +1264,9 @@ static int decode_packet(AVCodecContext *avctx, void *data, int *got_frame_ptr,
         save_bits(s, gb, remaining_bits(s, gb), 0);
     }
 
-    *(AVFrame *)data = s->frame;
     *got_frame_ptr   = s->frame.nb_samples > 0;
+    av_frame_move_ref(data, &s->frame);
+
     s->packet_offset = get_bits_count(gb) & 7;
 
     return (s->packet_loss) ? AVERROR_INVALIDDATA : get_bits_count(gb) >> 3;
