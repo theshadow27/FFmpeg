@@ -97,14 +97,6 @@ static const uint8_t cga_mode45_index[6][4] = {
     [5] = { 0, 11, 12, 15 }, // mode5, high intensity
 };
 
-static av_cold int decode_init(AVCodecContext *avctx)
-{
-    PicContext *s = avctx->priv_data;
-
-    avcodec_get_frame_defaults(&s->frame);
-    return 0;
-}
-
 static int decode_frame(AVCodecContext *avctx,
                         void *data, int *got_frame,
                         AVPacket *avpkt)
@@ -235,7 +227,7 @@ static int decode_frame(AVCodecContext *avctx,
                     break;
 
                 if (bits_per_plane == 8) {
-                    picmemset_8bpp(s frame,, val, run, &x, &y);
+                    picmemset_8bpp(s, frame, val, run, &x, &y);
                 } else {
                     picmemset(s, frame, val, run, &x, &y, &plane, bits_per_plane);
                 }
@@ -245,13 +237,13 @@ static int decode_frame(AVCodecContext *avctx,
         if (x < avctx->width && y >= 0) {
             int run = (y + 1) * avctx->width - x;
             if (bits_per_plane == 8)
-                picmemset_8bpp(s, val, run, &x, &y);
+                picmemset_8bpp(s, frame, val, run, &x, &y);
             else
-                picmemset(s, val, run / (8 / bits_per_plane), &x, &y, &plane, bits_per_plane);
+                picmemset(s, frame, val, run / (8 / bits_per_plane), &x, &y, &plane, bits_per_plane);
         }
     } else {
         while (y >= 0 && bytestream2_get_bytes_left(&s->g) > 0) {
-            memcpy(s->frame.data[0] + y * s->frame.linesize[0], s->g.buffer, FFMIN(avctx->width, bytestream2_get_bytes_left(&s->g)));
+            memcpy(frame->data[0] + y * frame->linesize[0], s->g.buffer, FFMIN(avctx->width, bytestream2_get_bytes_left(&s->g)));
             bytestream2_skip(&s->g, avctx->width);
             y--;
         }
@@ -266,7 +258,6 @@ AVCodec ff_pictor_decoder = {
     .type           = AVMEDIA_TYPE_VIDEO,
     .id             = AV_CODEC_ID_PICTOR,
     .priv_data_size = sizeof(PicContext),
-    .init           = decode_init,
     .decode         = decode_frame,
     .capabilities   = CODEC_CAP_DR1,
     .long_name      = NULL_IF_CONFIG_SMALL("Pictor/PC Paint"),
