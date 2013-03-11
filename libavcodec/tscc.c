@@ -47,6 +47,7 @@
 typedef struct TsccContext {
 
     AVCodecContext *avctx;
+    AVFrame *frame;
 
     // Bits per pixel
     int bpp;
@@ -68,7 +69,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     int buf_size = avpkt->size;
     CamtasiaContext * const c = avctx->priv_data;
     const unsigned char *encoded = buf;
-    AVFrame *frame = data;
+    AVFrame *frame = c->frame;
     int zret; // Zlib return code
     int ret, len = buf_size;
 
@@ -111,6 +112,8 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
         memcpy(frame->data[1], c->pal, AVPALETTE_SIZE);
     }
 
+    if ((ret = av_frame_ref(data, frame)) < 0)
+        return ret;
     *got_frame      = 1;
 
     /* always report that the buffer was completely consumed */
@@ -159,6 +162,8 @@ static av_cold int decode_init(AVCodecContext *avctx)
         return AVERROR_UNKNOWN;
     }
 
+    c->frame = av_frame_alloc();
+
     return 0;
 }
 
@@ -167,6 +172,7 @@ static av_cold int decode_end(AVCodecContext *avctx)
     CamtasiaContext * const c = avctx->priv_data;
 
     av_freep(&c->decomp_buf);
+    av_frame_free(&c->frame);
 
     inflateEnd(&c->zstream);
 
