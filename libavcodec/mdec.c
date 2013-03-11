@@ -210,11 +210,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
     a->mb_width  = (avctx->coded_width  + 15) / 16;
     a->mb_height = (avctx->coded_height + 15) / 16;
 
-<<<<<<< HEAD
-    avcodec_get_frame_defaults(&a->picture);
-||||||| merged common ancestors
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     a->avctx           = avctx;
 
     ff_dsputil_init(&a->dsp, avctx);
