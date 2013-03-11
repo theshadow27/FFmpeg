@@ -275,6 +275,8 @@ static int ref_picture(H264Context *h, Picture *dst, Picture *src)
     dst->field_picture           = src->field_picture;
     dst->needs_realloc           = src->needs_realloc;
     dst->reference               = src->reference;
+    dst->sync                    = src->sync;
+    dst->period_since_free       = src->period_since_free;
 
     return 0;
 fail:
