@@ -197,19 +197,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
 
     bytestream2_init(&c->stream, avpkt->data, avpkt->size);
 
-<<<<<<< HEAD
-    if (c->pic.data[0])
-        avctx->release_buffer(avctx, &c->pic);
-    c->pic.reference = 3;
-    if ((ret = ff_get_buffer(avctx, &c->pic)) < 0) {
-||||||| merged common ancestors
-    if (c->pic.data[0])
-        avctx->release_buffer(avctx, &c->pic);
-    c->pic.reference = 1;
-    if ((ret = ff_get_buffer(avctx, &c->pic)) < 0) {
-=======
     if ((ret = ff_get_buffer(avctx, frame, 0)) < 0) {
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
@@ -261,7 +249,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
     c->avctx       = avctx;
     avctx->pix_fmt = AV_PIX_FMT_PAL8;
-    avcodec_get_frame_defaults(&c->pic);
 
     c->frame      = av_mallocz(avctx->width * avctx->height);
     c->prev_frame = av_mallocz(avctx->width * avctx->height);
