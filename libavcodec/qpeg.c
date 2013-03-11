@@ -268,9 +268,10 @@ static int decode_frame(AVCodecContext *avctx,
 
     bytestream2_init(&a->buffer, avpkt->data, avpkt->size);
 
-    FFSWAP(AVFrame, *ref, *p);
+    av_frame_unref(ref);
+    av_frame_move_ref(ref, p);
 
-    if ((ret = ff_get_buffer(avctx, p, 0)) < 0) {
+    if ((ret = ff_get_buffer(avctx, p, AV_GET_BUFFER_FLAG_REF)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return ret;
     }
