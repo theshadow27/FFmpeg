@@ -485,7 +485,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
                                 FFALIGN(avctx->height, 4);
     unsigned int max_decomp_size;
 
-    avcodec_get_frame_defaults(&c->pic);
     if (avctx->extradata_size < 8) {
         av_log(avctx, AV_LOG_ERROR, "Extradata size too small.\n");
         return AVERROR_INVALIDDATA;
