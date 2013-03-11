@@ -368,8 +368,7 @@ static av_cold int paf_vid_close(AVCodecContext *avctx)
     PAFVideoDecContext *c = avctx->priv_data;
     int i;
 
-    if (c->pic.data[0])
-        avctx->release_buffer(avctx, &c->pic);
+    av_frame_unref(&c->pic);
 
     for (i = 0; i < 4; i++)
         av_freep(&c->frame[i]);
