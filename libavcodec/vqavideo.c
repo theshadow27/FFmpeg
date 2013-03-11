@@ -190,15 +190,6 @@ static av_cold int vqa_decode_init(AVCodecContext *avctx)
     }
     s->next_codebook_buffer_index = 0;
 
-<<<<<<< HEAD
-    avcodec_get_frame_defaults(&s->frame);
-    s->frame.data[0] = NULL;
-
-||||||| merged common ancestors
-    s->frame.data[0] = NULL;
-
-=======
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
     return 0;
 fail:
     av_freep(&s->codebook);
@@ -607,22 +598,8 @@ static int vqa_decode_frame(AVCodecContext *avctx,
     AVFrame *frame = data;
     int res;
 
-<<<<<<< HEAD
-    if (s->frame.data[0])
-        avctx->release_buffer(avctx, &s->frame);
-
-    if ((res = ff_get_buffer(avctx, &s->frame)) < 0) {
-        av_log(s->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
-||||||| merged common ancestors
-    if (s->frame.data[0])
-        avctx->release_buffer(avctx, &s->frame);
-
-    if ((res = ff_get_buffer(avctx, &s->frame)) < 0) {
-        av_log(s->avctx, AV_LOG_ERROR, "  VQA Video: get_buffer() failed\n");
-=======
     if ((res = ff_get_buffer(avctx, frame, 0)) < 0) {
-        av_log(s->avctx, AV_LOG_ERROR, "  VQA Video: get_buffer() failed\n");
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
+        av_log(s->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return res;
     }
 
