@@ -3450,6 +3450,12 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
             assert(h0->cur_pic_ptr->f.data[0]);
             assert(h0->cur_pic_ptr->reference != DELAYED_PIC_REF);
 
+            /* Mark old field/frame as completed */
+            if (!last_pic_droppable && h0->cur_pic_ptr->tf.owner == h0->avctx) {
+                ff_thread_report_progress(&h0->cur_pic_ptr->tf, INT_MAX,
+                                          last_pic_structure == PICT_BOTTOM_FIELD);
+            }
+
             /* figure out if we have a complementary field pair */
             if (!FIELD_PICTURE || h->picture_structure == last_pic_structure) {
                 /* Previous field is unmatched. Don't display it, but let it
