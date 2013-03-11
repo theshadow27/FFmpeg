@@ -689,7 +689,7 @@ static int svq1_decode_frame(AVCodecContext *avctx, void *data,
         } else {
             /* delta frame */
             uint8_t *previous = s->prev->data[i];
-            if (!previous || s->prev->width != s->cur->width || s->prev->height != s->cur->height) {
+            if (!previous || s->prev->width != cur->width || s->prev->height != cur->height) {
                 av_log(avctx, AV_LOG_ERROR, "Missing reference frame.\n");
                 result = AVERROR_INVALIDDATA;
                 goto err;
@@ -719,23 +719,12 @@ static int svq1_decode_frame(AVCodecContext *avctx, void *data,
         }
     }
 
-<<<<<<< HEAD
-    *(AVFrame*)data = *cur;
-    cur->qscale_table = NULL;
-    if (!s->nonref)
-        FFSWAP(AVFrame*, s->cur, s->prev);
-||||||| merged common ancestors
-    *(AVFrame*)data = *cur;
-    if (!s->nonref)
-        FFSWAP(AVFrame*, s->cur, s->prev);
-=======
     if (!s->nonref) {
         av_frame_unref(s->prev);
         result = av_frame_ref(s->prev, cur);
         if (result < 0)
             goto err;
     }
->>>>>>> 759001c534287a96dc96d1e274665feb7059145d
 
     *got_frame = 1;
     result     = buf_size;
