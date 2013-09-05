@@ -74,6 +74,9 @@ typedef struct ThreadData {
  \
             diff = FFMAX3(diff, min, -max); \
         } \
+        if (!(mode&4)) { \
+            diff = FFMAX3(diff, FFABS(prev4[0] - prev2[0]), FFABS(next2[0] - next4[0])); \
+        } \
  \
         if (spatial_pred > d + diff) \
            spatial_pred = d + diff; \
@@ -88,10 +91,13 @@ typedef struct ThreadData {
         next++; \
         prev2++; \
         next2++; \
+        prev4++; \
+        next4++; \
     }
 
 static void filter_line_c(void *dst1,
-                          void *prev1, void *cur1, void *next1,
+                          void *prev3, void *prev1,
+                          void *cur1, void *next1, void *next3,
                           int w, int prefs, int mrefs, int parity, int mode)
 {
     uint8_t *dst  = dst1;
@@ -101,6 +107,8 @@ static void filter_line_c(void *dst1,
     int x;
     uint8_t *prev2 = parity ? prev : cur ;
     uint8_t *next2 = parity ? cur  : next;
+    uint8_t *prev4 = parity ? prev3: prev ;
+    uint8_t *next4 = parity ? next : next3;
 
     /* The function is called with the pointers already pointing to data[3] and
      * with 6 subtracted from the width.  This allows the FILTER macro to be
@@ -110,7 +118,8 @@ static void filter_line_c(void *dst1,
 }
 
 #define MAX_ALIGN 8
-static void filter_edges(void *dst1, void *prev1, void *cur1, void *next1,
+static void filter_edges(void *dst1, void *prev3, void *prev1,
+                         void *cur1, void *next1, void *next3,
                          int w, int prefs, int mrefs, int parity, int mode)
 {
     uint8_t *dst  = dst1;
@@ -120,6 +129,8 @@ static void filter_edges(void *dst1, void *prev1, void *cur1, void *next1,
     int x;
     uint8_t *prev2 = parity ? prev : cur ;
     uint8_t *next2 = parity ? cur  : next;
+    uint8_t *prev4 = parity ? prev3: prev ;
+    uint8_t *next4 = parity ? next : next3;
 
     /* Only edge pixels need to be processed here.  A constant value of false
      * for is_not_edge should let the compiler ignore the whole branch. */
@@ -131,6 +142,8 @@ static void filter_edges(void *dst1, void *prev1, void *cur1, void *next1,
     next = (uint8_t*)next1 + w - (MAX_ALIGN-1);
     prev2 = (uint8_t*)(parity ? prev : cur);
     next2 = (uint8_t*)(parity ? cur  : next);
+    prev4 = (uint8_t*)(parity ? prev3: next);
+    next4 = (uint8_t*)(parity ? prev : next3);
 
     FILTER(w - (MAX_ALIGN-1), w - 3, 1)
     FILTER(w - 3, w, 0)
@@ -138,7 +151,8 @@ static void filter_edges(void *dst1, void *prev1, void *cur1, void *next1,
 
 
 static void filter_line_c_16bit(void *dst1,
-                                void *prev1, void *cur1, void *next1,
+                                void *prev3, void *prev1,
+                                void *cur1, void *next1, void *next3,
                                 int w, int prefs, int mrefs, int parity,
                                 int mode)
 {
@@ -149,13 +163,16 @@ static void filter_line_c_16bit(void *dst1,
     int x;
     uint16_t *prev2 = parity ? prev : cur ;
     uint16_t *next2 = parity ? cur  : next;
+    uint16_t *prev4 = parity ? prev3: prev ;
+    uint16_t *next4 = parity ? next : next3;
     mrefs /= 2;
     prefs /= 2;
 
     FILTER(0, w, 1)
 }
 
-static void filter_edges_16bit(void *dst1, void *prev1, void *cur1, void *next1,
+static void filter_edges_16bit(void *dst1, void *prev3, void *prev1,
+                               void *cur1, void *next1, void *next3,
                                int w, int prefs, int mrefs, int parity, int mode)
 {
     uint16_t *dst  = dst1;
@@ -165,6 +182,8 @@ static void filter_edges_16bit(void *dst1, void *prev1, void *cur1, void *next1,
     int x;
     uint16_t *prev2 = parity ? prev : cur ;
     uint16_t *next2 = parity ? cur  : next;
+    uint16_t *prev4 = parity ? prev3: prev ;
+    uint16_t *next4 = parity ? next : next3;
     mrefs /= 2;
     prefs /= 2;
 
@@ -176,6 +195,8 @@ static void filter_edges_16bit(void *dst1, void *prev1, void *cur1, void *next1,
     next  = (uint16_t*)next1 + w - (MAX_ALIGN/2-1);
     prev2 = (uint16_t*)(parity ? prev : cur);
     next2 = (uint16_t*)(parity ? cur  : next);
+    prev4 = (uint16_t*)(parity ? prev3: next);
+    next4 = (uint16_t*)(parity ? prev : next3);
 
     FILTER(w - (MAX_ALIGN/2-1), w - 3, 1)
     FILTER(w - 3, w, 0)
@@ -197,17 +218,19 @@ static int filter_slice(AVFilterContext *ctx, void *arg, int jobnr, int nb_jobs)
      */
     for (y = slice_start; y < slice_end; y++) {
         if ((y ^ td->parity) & 1) {
+            uint8_t *prev2= &s->prev2->data[td->plane][y * refs];
             uint8_t *prev = &s->prev->data[td->plane][y * refs];
             uint8_t *cur  = &s->cur ->data[td->plane][y * refs];
             uint8_t *next = &s->next->data[td->plane][y * refs];
+            uint8_t *next2= &s->next2->data[td->plane][y * refs];
             uint8_t *dst  = &td->frame->data[td->plane][y * td->frame->linesize[td->plane]];
             int     mode  = y == 1 || y + 2 == td->h ? 2 : s->mode;
-            s->filter_line(dst + pix_3, prev + pix_3, cur + pix_3,
-                           next + pix_3, td->w - (3 + MAX_ALIGN/df-1),
+            s->filter_line(dst + pix_3, prev2 + pix_3, prev + pix_3, cur + pix_3,
+                           next + pix_3, next2 + pix_3, td->w - (3 + MAX_ALIGN/df-1),
                            y + 1 < td->h ? refs : -refs,
                            y ? -refs : refs,
                            td->parity ^ td->tff, mode);
-            s->filter_edges(dst, prev, cur, next, td->w,
+            s->filter_edges(dst, prev2, prev, cur, next, next2, td->w,
                             y + 1 < td->h ? refs : -refs,
                             y ? -refs : refs,
                             td->parity ^ td->tff, mode);
@@ -319,24 +342,33 @@ static int filter_frame(AVFilterLink *link, AVFrame *frame)
     if (yadif->frame_pending)
         return_frame(ctx, 1);
 
-    if (yadif->prev)
-        av_frame_free(&yadif->prev);
+    if (yadif->prev2)
+        av_frame_free(&yadif->prev2);
+    yadif->prev2= yadif->prev;
     yadif->prev = yadif->cur;
     yadif->cur  = yadif->next;
-    yadif->next = frame;
+    yadif->next = yadif->next2;
+    yadif->next2= frame;
 
     if (!yadif->cur)
         return 0;
 
-    if (checkstride(yadif, yadif->next, yadif->cur)) {
+    if (checkstride(yadif, yadif->next2, yadif->next)) {
         av_log(ctx, AV_LOG_VERBOSE, "Reallocating frame due to differing stride\n");
-        fixstride(link, yadif->next);
+        fixstride(link, yadif->next2);
     }
+    if (checkstride(yadif, yadif->next2, yadif->next))
+        fixstride(link, yadif->next);
     if (checkstride(yadif, yadif->next, yadif->cur))
         fixstride(link, yadif->cur);
     if (yadif->prev && checkstride(yadif, yadif->next, yadif->prev))
         fixstride(link, yadif->prev);
-    if (checkstride(yadif, yadif->next, yadif->cur) || (yadif->prev && checkstride(yadif, yadif->next, yadif->prev))) {
+    if (yadif->prev && checkstride(yadif, yadif->prev, yadif->prev2))
+        fixstride(link, yadif->prev2);
+    if (   checkstride(yadif, yadif->next2, yadif->next)
+        || checkstride(yadif, yadif->next, yadif->cur)
+        || (yadif->prev  && checkstride(yadif, yadif->next, yadif->prev))
+        || (yadif->prev2 && checkstride(yadif, yadif->prev, yadif->prev2))) {
         av_log(ctx, AV_LOG_ERROR, "Failed to reallocate frame\n");
         return -1;
     }
@@ -354,6 +386,9 @@ static int filter_frame(AVFilterLink *link, AVFrame *frame)
 
     if (!yadif->prev &&
         !(yadif->prev = av_frame_clone(yadif->cur)))
+        return AVERROR(ENOMEM);
+    if (!yadif->prev2 &&
+        !(yadif->prev2 = av_frame_clone(yadif->prev)))
         return AVERROR(ENOMEM);
 
     yadif->out = ff_get_video_buffer(ctx->outputs[0], link->w, link->h);
@@ -382,21 +417,21 @@ static int request_frame(AVFilterLink *link)
     do {
         int ret;
 
-        if (yadif->eof)
+        if (yadif->eof>1)
             return AVERROR_EOF;
 
         ret  = ff_request_frame(link->src->inputs[0]);
 
         if (ret == AVERROR_EOF && yadif->cur) {
-            AVFrame *next = av_frame_clone(yadif->next);
+            AVFrame *next = av_frame_clone(yadif->next2);
 
             if (!next)
                 return AVERROR(ENOMEM);
 
-            next->pts = yadif->next->pts * 2 - yadif->cur->pts;
+            next->pts = yadif->next2->pts * 2 - yadif->next->pts;
 
             filter_frame(link->src->inputs[0], next);
-            yadif->eof = 1;
+            yadif->eof++;
         } else if (ret < 0) {
             return ret;
         }
@@ -409,9 +444,11 @@ static av_cold void uninit(AVFilterContext *ctx)
 {
     YADIFContext *yadif = ctx->priv;
 
+    av_frame_free(&yadif->prev2);
     av_frame_free(&yadif->prev);
     av_frame_free(&yadif->cur );
     av_frame_free(&yadif->next);
+    av_frame_free(&yadif->next2);
 }
 
 static int query_formats(AVFilterContext *ctx)
@@ -484,8 +521,8 @@ static int config_props(AVFilterLink *link)
         s->filter_edges = filter_edges;
     }
 
-    if (ARCH_X86)
-        ff_yadif_init_x86(s);
+//     if (ARCH_X86)
+//         ff_yadif_init_x86(s);
 
     return 0;
 }
@@ -497,7 +534,7 @@ static int config_props(AVFilterLink *link)
 #define CONST(name, help, val, unit) { name, help, 0, AV_OPT_TYPE_CONST, {.i64=val}, INT_MIN, INT_MAX, FLAGS, unit }
 
 static const AVOption yadif_options[] = {
-    { "mode",   "specify the interlacing mode", OFFSET(mode), AV_OPT_TYPE_INT, {.i64=YADIF_MODE_SEND_FRAME}, 0, 3, FLAGS, "mode"},
+    { "mode",   "specify the interlacing mode", OFFSET(mode), AV_OPT_TYPE_INT, {.i64=YADIF_MODE_SEND_FRAME}, 0, 7, FLAGS, "mode"},
     CONST("send_frame",           "send one frame for each frame",                                     YADIF_MODE_SEND_FRAME,           "mode"),
     CONST("send_field",           "send one frame for each field",                                     YADIF_MODE_SEND_FIELD,           "mode"),
     CONST("send_frame_nospatial", "send one frame for each frame, but skip spatial interlacing check", YADIF_MODE_SEND_FRAME_NOSPATIAL, "mode"),
