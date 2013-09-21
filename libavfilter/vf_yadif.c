@@ -45,7 +45,73 @@ typedef struct ThreadData {
             spatial_score= score;\
             spatial_pred= (cur[mrefs  +(j)] + cur[prefs  -(j)])>>1;\
 
-/* The is_not_edge argument here controls when the code will enter a branch
+#define CHECK2(j)\
+    {   int score = FFABS(cur[mrefs - 1 + (j)] - cur[prefs - 1 - (j)])\
+                  + FFABS(cur[mrefs  +(j)] - cur[prefs  -(j)])\
+                  + FFABS(cur[mrefs + 1 + (j)] - cur[prefs + 1 - (j)]);\
+        if (FFABS(j) > 0)\
+            score +=  FFABS(cur[mrefs - 2 + (j)] - cur[prefs - 2 - (j)])\
+                    + FFABS(cur[mrefs + 2 + (j)] - cur[prefs + 2 - (j)]);\
+        if (FFABS(j) > 1)\
+            score +=  FFABS(cur[mrefs - 3 + (j)] - cur[prefs - 3 - (j)])\
+                    + FFABS(cur[mrefs + 3 + (j)] - cur[prefs + 3 - (j)]);\
+        if (FFABS(j) > 2)\
+            score +=  FFABS(cur[mrefs - 4 + (j)] - cur[prefs - 4 - (j)])\
+                    + FFABS(cur[mrefs + 4 + (j)] - cur[prefs + 4 - (j)]);\
+        if (FFABS(j) > 3)\
+            score +=  FFABS(cur[mrefs - 5 + (j)] - cur[prefs - 5 - (j)])\
+                    + FFABS(cur[mrefs + 5 + (j)] - cur[prefs + 5 - (j)]);\
+        \
+        if (score < spatial_score) {\
+            spatial_score= score;\
+            spatial_pred= (cur[mrefs  +(j)] + cur[prefs  -(j)])>>1;\
+
+#define SQR(a) ((a)*(a))
+
+#define CHECK3(j)\
+    {   int score = SQR(cur[mrefs - 1 + (j)] - cur[prefs - 1 - (j)])\
+                  + SQR(cur[mrefs     + (j)] - cur[prefs  -(j)])\
+                  + SQR(cur[mrefs + 1 + (j)] - cur[prefs + 1 - (j)])\
+                  + SQR(cur[3*mrefs - 1 + (j)] - cur[mrefs - 1 - (j)])\
+                  + SQR(cur[3*mrefs     + (j)] - cur[mrefs     - (j)])\
+                  + SQR(cur[3*mrefs + 1 + (j)] - cur[mrefs + 1 - (j)])\
+                  + SQR(cur[prefs - 1 + (j)] - cur[3*prefs - 1 - (j)])\
+                  + SQR(cur[prefs     + (j)] - cur[3*prefs     - (j)])\
+                  + SQR(cur[prefs + 1 + (j)] - cur[3*prefs + 1 - (j)]);\
+        if (FFABS(j) > 0)\
+            score +=  SQR(cur[mrefs - 2 + (j)] - cur[prefs - 2 - (j)])\
+                    + SQR(cur[mrefs + 2 + (j)] - cur[prefs + 2 - (j)])\
+                    + SQR(cur[3*mrefs - 2 + (j)] - cur[mrefs - 2 - (j)])\
+                    + SQR(cur[3*mrefs + 2 + (j)] - cur[mrefs + 2 - (j)])\
+                    + SQR(cur[prefs - 2 + (j)] - cur[3*prefs - 2 - (j)])\
+                    + SQR(cur[prefs + 2 + (j)] - cur[3*prefs + 2 - (j)]);\
+        if (FFABS(j) > 1)\
+            score +=  SQR(cur[mrefs - 3 + (j)] - cur[prefs - 3 - (j)])\
+                    + SQR(cur[mrefs + 3 + (j)] - cur[prefs + 3 - (j)])\
+                    + SQR(cur[3*mrefs - 3 + (j)] - cur[mrefs - 3 - (j)])\
+                    + SQR(cur[3*mrefs + 3 + (j)] - cur[mrefs + 3 - (j)])\
+                    + SQR(cur[prefs - 3 + (j)] - cur[3*prefs - 3 - (j)])\
+                    + SQR(cur[prefs + 3 + (j)] - cur[3*prefs + 3 - (j)]);\
+        if (FFABS(j) > 2)\
+            score +=  SQR(cur[mrefs - 4 + (j)] - cur[prefs - 4 - (j)])\
+                    + SQR(cur[mrefs + 4 + (j)] - cur[prefs + 4 - (j)])\
+                    + SQR(cur[3*mrefs - 4 + (j)] - cur[mrefs - 4 - (j)])\
+                    + SQR(cur[3*mrefs + 4 + (j)] - cur[mrefs + 4 - (j)])\
+                    + SQR(cur[prefs - 4 + (j)] - cur[3*prefs - 4 - (j)])\
+                    + SQR(cur[prefs + 4 + (j)] - cur[3*prefs + 4 - (j)]);\
+        if (FFABS(j) > 3)\
+            score +=  SQR(cur[mrefs - 5 + (j)] - cur[prefs - 5 - (j)])\
+                    + SQR(cur[mrefs + 5 + (j)] - cur[prefs + 5 - (j)])\
+                    + SQR(cur[3*mrefs - 5 + (j)] - cur[mrefs - 5 - (j)])\
+                    + SQR(cur[3*mrefs + 5 + (j)] - cur[mrefs + 5 - (j)])\
+                    + SQR(cur[prefs - 5 + (j)] - cur[3*prefs - 5 - (j)])\
+                    + SQR(cur[prefs + 5 + (j)] - cur[3*prefs + 5 - (j)]);\
+        score = score * 256 / (9 + 6*FFABS(j));\
+        if (score < spatial_score) {\
+            spatial_score= score;\
+            spatial_pred= (cur[mrefs  +(j)] + cur[prefs  -(j)])>>1;\
+
+            /* The is_not_edge argument here controls when the code will enter a branch
  * which reads up to and including x-3 and x+3. */
 
 #define FILTER(start, end, is_not_edge) \
@@ -60,10 +126,42 @@ typedef struct ThreadData {
         int spatial_pred = (c+e) >> 1; \
  \
         if (is_not_edge) {\
-            int spatial_score = FFABS(cur[mrefs - 1] - cur[prefs - 1]) + FFABS(c-e) \
-                              + FFABS(cur[mrefs + 1] - cur[prefs + 1]) - 1; \
-            CHECK(-1) CHECK(-2) }} }} \
-            CHECK( 1) CHECK( 2) }} }} \
+            int spatial_score = INT_MAX;\
+            int z_score       = SQR(cur[3*mrefs - 2] - cur[3*mrefs + 1])\
+                              + SQR(cur[  mrefs - 2] - cur[  mrefs + 1]) \
+                              + SQR(cur[  prefs - 2] - cur[  prefs + 1]) \
+                              + SQR(cur[3*prefs - 2] - cur[3*prefs + 1]) \
+                              + SQR(cur[3*mrefs - 1] - cur[3*mrefs + 2])\
+                              + SQR(cur[  mrefs - 1] - cur[  mrefs + 2]) \
+                              + SQR(cur[  prefs - 1] - cur[  prefs + 2]) \
+                              + SQR(cur[3*prefs - 1] - cur[3*prefs + 2]) \
+                              + SQR(cur[3*mrefs - 3] - cur[3*mrefs])\
+                              + SQR(cur[  mrefs - 3] - cur[  mrefs]) \
+                              + SQR(cur[  prefs - 3] - cur[  prefs]) \
+                              + SQR(cur[3*prefs - 3] - cur[3*prefs]) \
+                              + SQR(cur[3*mrefs] - cur[3*mrefs + 3])\
+                              + SQR(cur[  mrefs] - cur[  mrefs + 3]) \
+                              + SQR(cur[  prefs] - cur[  prefs + 3]) \
+                              + SQR(cur[3*prefs] - cur[3*prefs + 3]) \
+                              + SQR(cur[3*mrefs - 4] - cur[3*mrefs - 1])\
+                              + SQR(cur[  mrefs - 4] - cur[  mrefs - 1]) \
+                              + SQR(cur[  prefs - 4] - cur[  prefs - 1]) \
+                              + SQR(cur[3*prefs - 4] - cur[3*prefs - 1]) \
+                              + SQR(cur[3*mrefs + 1] - cur[3*mrefs + 4])\
+                              + SQR(cur[  mrefs + 1] - cur[  mrefs + 4]) \
+                              + SQR(cur[  prefs + 1] - cur[  prefs + 4]) \
+                              + SQR(cur[3*prefs + 1] - cur[3*prefs + 4]); \
+            CHECK3(0) }}\
+            CHECK3(-1) CHECK3(-2) }} }} \
+            CHECK3( 1) CHECK3( 2) }} }} \
+            if (z_score * 256 / 8 < spatial_score) { \
+            CHECK3(2) }} \
+            CHECK3(-2) }} \
+            CHECK3(3) }} \
+            CHECK3(-3) }} \
+            CHECK3(4) }} \
+            CHECK3(-4) }} \
+            }\
         }\
  \
         if (!(mode&2)) { \
