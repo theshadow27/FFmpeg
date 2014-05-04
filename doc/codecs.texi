@@ -272,6 +272,10 @@ decoding untrusted input.
 @item b_qoffset @var{float} (@emph{encoding,video})
 Set QP offset between P and B frames.
 
+@item mmb @var{string} (@emph{decoding,video})
+Move the bit position of macroblocks. Syntax:
+x1:y1:bitpos1,x2:y2:bitpost2
+
 @item err_detect @var{flags} (@emph{decoding,audio,video})
 Set error detection flags.
 
@@ -459,6 +463,9 @@ picture info
 @item rc
 rate control
 @item bitstream
+
+@item mb_pos_size
+macroblock x, y, bitposition and bitsize
 
 @item mb_type
 macroblock (MB) type
