@@ -168,27 +168,32 @@ static int get_consumed_bytes(MpegEncContext *s, int buf_size)
     }
 }
 
-static int get_bitpos_from_mmb_part (int mb_x, int mb_y, const char *mmb_part) {
+static int get_bitpos_from_mmb_part (GetBitContext *gb, int mb_x, int mb_y, const char *mmb_part) {
     int bitpos = INT_MIN;
-    int mmb_x, mmb_y, mmb_pos;
+    int mmb_x, mmb_y, mmb_pos, xor;
 
     if (sscanf(mmb_part, "%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos) == 3) {
         if (mb_x == mmb_x && mb_y == mmb_y) {
             bitpos = mmb_pos;
+        }
+    } else if (sscanf(mmb_part, "X:%d:%X", &mmb_pos, &xor) == 2) {
+        if (mb_x == 0 && mb_y == 0) {
+            ((uint8_t*)(gb->buffer))[ mmb_pos>>3   ] ^= xor >>    (mmb_pos&7);
+            ((uint8_t*)(gb->buffer))[(mmb_pos>>3)+1] ^= xor << (8-(mmb_pos&7));
         }
     }
 
     return bitpos;
 }
 
-static int get_bitpos_from_mmb (int mb_x, int mb_y, const char *mmb) {
+static int get_bitpos_from_mmb (GetBitContext *gb, int mb_x, int mb_y, const char *mmb) {
     int bitpos = INT_MIN;
 
     while (bitpos == INT_MIN && mmb && *mmb) {
         char *token = av_get_token(&mmb, ",");
         if (*mmb)
             mmb++;
-        bitpos = get_bitpos_from_mmb_part(mb_x, mb_y, token);
+        bitpos = get_bitpos_from_mmb_part(gb, mb_x, mb_y, token);
         av_free(token);
     }
 
@@ -261,7 +266,7 @@ static int decode_slice(MpegEncContext *s)
                     ret, get_bits_count(&s->gb), show_bits(&s->gb, 24));
 
             if (s->avctx->mmb) {
-                int new_bitpos = get_bitpos_from_mmb(s->mb_x, s->mb_y, s->avctx->mmb);
+                int new_bitpos = get_bitpos_from_mmb(&gb_bak, s->mb_x, s->mb_y, s->avctx->mmb);
 
                 if (new_bitpos >= 0) {
                     if (s->gb.buffer == gb_blank.buffer)
@@ -447,6 +452,8 @@ int ff_h263_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     int ret;
     int slice_ret = 0;
     AVFrame *pict = data;
+
+    buf = av_memdup(buf, buf_size);
 
     s->flags  = avctx->flags;
     s->flags2 = avctx->flags2;
