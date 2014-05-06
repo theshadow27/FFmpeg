@@ -169,7 +169,7 @@ static int get_consumed_bytes(MpegEncContext *s, int buf_size)
 }
 
 static int get_bitpos_from_mmb_part (int mb_x, int mb_y, const char *mmb_part) {
-    int bitpos = -1;
+    int bitpos = INT_MIN;
     int mmb_x, mmb_y, mmb_pos;
 
     if (sscanf(mmb_part, "%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos) == 3) {
@@ -182,9 +182,9 @@ static int get_bitpos_from_mmb_part (int mb_x, int mb_y, const char *mmb_part) {
 }
 
 static int get_bitpos_from_mmb (int mb_x, int mb_y, const char *mmb) {
-    int bitpos = -1;
+    int bitpos = INT_MIN;
 
-    while (bitpos < 0 && mmb && *mmb) {
+    while (bitpos == INT_MIN && mmb && *mmb) {
         char *token = av_get_token(&mmb, ",");
         if (*mmb)
             mmb++;
@@ -201,6 +201,10 @@ static int decode_slice(MpegEncContext *s)
                           ? (ER_AC_END | ER_AC_ERROR) : 0x7F;
     const int mb_size   = 16 >> s->avctx->lowres;
     int ret;
+    GetBitContext gb_blank, gb_bak = s->gb;
+    static const uint8_t blank[32] = {0x8D, 0xB6, 0xFC};
+
+    init_get_bits(&gb_blank, blank, 22);
 
     s->last_resync_gb   = s->gb;
     s->first_slice_line = 1;
@@ -251,7 +255,7 @@ static int decode_slice(MpegEncContext *s)
         ff_init_block_index(s);
         for (; s->mb_x < s->mb_width; s->mb_x++) {
             int ret;
-            int bit_count_before_decode;
+            int bit_count_before_decode, bit_count_now;
 
             av_dlog(s, "%d %d %06X\n",
                     ret, get_bits_count(&s->gb), show_bits(&s->gb, 24));
@@ -260,8 +264,12 @@ static int decode_slice(MpegEncContext *s)
                 int new_bitpos = get_bitpos_from_mmb(s->mb_x, s->mb_y, s->avctx->mmb);
 
                 if (new_bitpos >= 0) {
-                    int bit_count_now = get_bits_count(&s->gb);
+                    if (s->gb.buffer == gb_blank.buffer)
+                        s->gb = gb_bak;
+                    bit_count_now = get_bits_count(&s->gb);
                     skip_bits(&s->gb, new_bitpos - bit_count_now);
+                } else if (new_bitpos == -1 || s->gb.buffer == gb_blank.buffer) {
+                    s->gb = gb_blank;
                 }
             }
 
