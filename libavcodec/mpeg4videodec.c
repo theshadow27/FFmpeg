@@ -1336,6 +1336,10 @@ static int mpeg4_decode_mb(MpegEncContext *s, int16_t block[6][64])
                        "cbpc damaged at %d %d %d\n", s->mb_x, s->mb_y, get_bits_count(&s->gb));
                 return -1;
             }
+            if (cbpc & 8)
+                av_log(s->avctx, AV_LOG_WARNING, "dquant at %d %d (qp=%d)\n", s->mb_x, s->mb_y, s->qscale);
+            if (cbpc == 20)
+                av_log(s->avctx, AV_LOG_WARNING, "stuffing at %d %d\n", s->mb_x, s->mb_y);
         } while (cbpc == 20);
 
         s->dsp.clear_blocks(s->block[0]);
@@ -1591,6 +1595,10 @@ static int mpeg4_decode_mb(MpegEncContext *s, int16_t block[6][64])
                        "I cbpc damaged at %d %d %d\n", s->mb_x, s->mb_y, get_bits_count(&s->gb));
                 return -1;
             }
+            if (cbpc & 4)
+                av_log(s->avctx, AV_LOG_WARNING, "dquant at %d %d (qp=%d)\n", s->mb_x, s->mb_y, s->qscale);
+            if (cbpc == 8)
+                av_log(s->avctx, AV_LOG_WARNING, "stuffing at %d %d\n", s->mb_x, s->mb_y);
         } while (cbpc == 8);
 
         dquant = cbpc & 4;
