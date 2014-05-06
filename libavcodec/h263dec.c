@@ -168,13 +168,59 @@ static int get_consumed_bytes(MpegEncContext *s, int buf_size)
     }
 }
 
-static int get_bitpos_from_mmb_part (GetBitContext *gb, int mb_x, int mb_y, const char *mmb_part) {
+static void mpeg4_encode_dc(PutBitContext *pb, int level, int n)
+{
+    int size, v;
+    /* find number of bits */
+    size = 0;
+    v    = abs(level);
+    while (v) {
+        v >>= 1;
+        size++;
+    }
+
+    if (n < 4) {
+        /* luminance */
+        put_bits(pb, ff_mpeg4_DCtab_lum[size][1], ff_mpeg4_DCtab_lum[size][0]);
+    } else {
+        /* chrominance */
+        put_bits(pb, ff_mpeg4_DCtab_chrom[size][1], ff_mpeg4_DCtab_chrom[size][0]);
+    }
+
+    /* encode remaining bits */
+    if (size > 0) {
+        if (level < 0)
+            level = (-level) ^ ((1 << size) - 1);
+        put_bits(pb, size, level);
+        if (size > 8)
+            put_bits(pb, 1, 1);
+    }
+}
+
+static int get_bitpos_from_mmb_part (GetBitContext *gb, GetBitContext *gb_blank, int mb_x, int mb_y, const char *mmb_part) {
     int bitpos = INT_MIN;
     int mmb_x, mmb_y, mmb_pos, xor;
+    int dc[6]= {0};
 
-    if (sscanf(mmb_part, "%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos) == 3) {
+    if (sscanf(mmb_part, "%d:%d:%d:%d:%d:%d:%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos,
+               &dc[0], &dc[1], &dc[2], &dc[3], &dc[4], &dc[5]) == 3+6 ||
+        sscanf(mmb_part, "%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos) == 3
+    ) {
         if (mb_x == mmb_x && mb_y == mmb_y) {
             bitpos = mmb_pos;
+            if (mmb_pos == -1) {
+                int i;
+                PutBitContext pb;
+                init_put_bits(&pb, gb_blank->buffer, 64);
+
+                put_bits(&pb, 6, 0x23); //100011
+                for(i=0; i<6; i++)
+                    mpeg4_encode_dc(&pb, dc[i], i);
+                put_bits(&pb, 1, 1);
+                flush_put_bits(&pb);
+
+                init_get_bits(gb_blank, gb_blank->buffer, put_bits_count(&pb));
+            }
         }
     } else if (sscanf(mmb_part, "X:%d:%X", &mmb_pos, &xor) == 2) {
         if (mb_x == 0 && mb_y == 0) {
@@ -186,14 +232,14 @@ static int get_bitpos_from_mmb_part (GetBitContext *gb, int mb_x, int mb_y, cons
     return bitpos;
 }
 
-static int get_bitpos_from_mmb (GetBitContext *gb, int mb_x, int mb_y, const char *mmb) {
+static int get_bitpos_from_mmb (GetBitContext *gb, GetBitContext *gb_blank, int mb_x, int mb_y, const char *mmb) {
     int bitpos = INT_MIN;
 
     while (bitpos == INT_MIN && mmb && *mmb) {
         char *token = av_get_token(&mmb, ",");
         if (*mmb)
             mmb++;
-        bitpos = get_bitpos_from_mmb_part(gb, mb_x, mb_y, token);
+        bitpos = get_bitpos_from_mmb_part(gb, gb_blank, mb_x, mb_y, token);
         av_free(token);
     }
 
@@ -207,7 +253,7 @@ static int decode_slice(MpegEncContext *s)
     const int mb_size   = 16 >> s->avctx->lowres;
     int ret;
     GetBitContext gb_blank, gb_bak = s->gb;
-    static const uint8_t blank[32] = {0x8D, 0xB6, 0xFC};
+    uint8_t blank[128] = {0x8D, 0xB6, 0xFC};
 
     init_get_bits(&gb_blank, blank, 22);
 
@@ -266,7 +312,7 @@ static int decode_slice(MpegEncContext *s)
                     ret, get_bits_count(&s->gb), show_bits(&s->gb, 24));
 
             if (s->avctx->mmb) {
-                int new_bitpos = get_bitpos_from_mmb(&gb_bak, s->mb_x, s->mb_y, s->avctx->mmb);
+                int new_bitpos = get_bitpos_from_mmb(&gb_bak, &gb_blank, s->mb_x, s->mb_y, s->avctx->mmb);
 
                 if (new_bitpos >= 0) {
                     if (s->gb.buffer == gb_blank.buffer)
