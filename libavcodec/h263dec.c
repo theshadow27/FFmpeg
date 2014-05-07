@@ -207,6 +207,10 @@ static int get_bitpos_from_mmb_part (GetBitContext *gb, GetBitContext *gb_blank,
         sscanf(mmb_part, "%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos) == 3
     ) {
         if (mb_x == mmb_x && mb_y == mmb_y) {
+            if (mmb_pos < 0 || mmb_pos > gb->size_in_bits - 1) {
+                av_log(NULL, AV_LOG_ERROR, "mmb bit pos invalid\n");
+                return INT_MIN;
+            }
             bitpos = mmb_pos;
             if (mmb_pos == -1) {
                 int i;
@@ -214,8 +218,13 @@ static int get_bitpos_from_mmb_part (GetBitContext *gb, GetBitContext *gb_blank,
                 init_put_bits(&pb, gb_blank->buffer, 64);
 
                 put_bits(&pb, 6, 0x23); //100011
-                for(i=0; i<6; i++)
+                for(i=0; i<6; i++) {
+                    if (dc[i] < -255 || dc[i] > 255) {
+                        av_log(NULL, AV_LOG_ERROR, "mmb dc invalid\n");
+                        return INT_MIN;
+                    }
                     mpeg4_encode_dc(&pb, dc[i], i);
+                }
                 put_bits(&pb, 1, 1);
                 flush_put_bits(&pb);
 
@@ -224,6 +233,10 @@ static int get_bitpos_from_mmb_part (GetBitContext *gb, GetBitContext *gb_blank,
         }
     } else if (sscanf(mmb_part, "X:%d:%X", &mmb_pos, &xor) == 2) {
         if (mb_x == 0 && mb_y == 0) {
+            if (mmb_pos < 0 || mmb_pos > gb->size_in_bits - 8) {
+                av_log(NULL, AV_LOG_ERROR, "mmb bit pos invalid\n");
+                return INT_MIN;
+            }
             ((uint8_t*)(gb->buffer))[ mmb_pos>>3   ] ^= xor >>    (mmb_pos&7);
             ((uint8_t*)(gb->buffer))[(mmb_pos>>3)+1] ^= xor << (8-(mmb_pos&7));
         }
