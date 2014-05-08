@@ -519,7 +519,7 @@ int ff_h263_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     int slice_ret = 0;
     AVFrame *pict = data;
 
-    buf = av_memdup(buf, buf_size);
+    buf = av_memdup(buf, buf_size + FF_INPUT_BUFFER_PADDING_SIZE);
 
     s->flags  = avctx->flags;
     s->flags2 = avctx->flags2;
