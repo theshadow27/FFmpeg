@@ -237,6 +237,14 @@ static inline int ff_mpeg4_pred_dc(MpegEncContext *s, int n, int level,
                 return -1;
             }
         }
+        if (s->err_recognition & AV_EF_IGNORE_ERR) {
+            level = av_clip(level, 0, 2048 / scale + 1);
+            if (level != ret) {
+                ret = level;
+                av_log(s->avctx, AV_LOG_ERROR,
+                       "dc clipped at %dx%d\n", s->mb_x, s->mb_y);
+            }
+        }
     }
     level *= scale;
     if (level & (~2047)) {
