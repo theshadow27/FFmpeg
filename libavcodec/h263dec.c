@@ -197,7 +197,7 @@ static void mpeg4_encode_dc(PutBitContext *pb, int level, int n)
     }
 }
 
-static int get_bitpos_from_mmb_part (GetBitContext *gb, GetBitContext *gb_blank, int mb_x, int mb_y, const char *mmb_part) {
+static int get_bitpos_from_mmb_part (MpegEncContext *s, GetBitContext *gb, GetBitContext *gb_blank, int mb_x, int mb_y, const char *mmb_part) {
     int bitpos = INT_MIN;
     int mmb_x, mmb_y, mmb_pos, xor;
     int dc[6]= {0};
@@ -207,13 +207,20 @@ static int get_bitpos_from_mmb_part (GetBitContext *gb, GetBitContext *gb_blank,
         sscanf(mmb_part, "%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos) == 3
     ) {
         if (mb_x == mmb_x && mb_y == mmb_y) {
-            if (mmb_pos < 0 || mmb_pos > gb->size_in_bits - 1) {
+            int i;
+            if (mmb_pos < -2 || mmb_pos > gb->size_in_bits - 1) {
                 av_log(NULL, AV_LOG_ERROR, "mmb bit pos invalid\n");
                 return INT_MIN;
             }
             bitpos = mmb_pos;
-            if (mmb_pos == -1) {
-                int i;
+            s->is_forced_dc = (mmb_pos == -2);
+            if (s->is_forced_dc) {
+                for (i = 0; i<6; i++)
+                    s->forced_dc[i] = dc[i] + 128;
+                memset(dc, 0, sizeof(dc));
+            }
+
+            if (mmb_pos == -1 || mmb_pos == -2) {
                 PutBitContext pb;
                 init_put_bits(&pb, gb_blank->buffer, 64);
 
@@ -245,14 +252,14 @@ static int get_bitpos_from_mmb_part (GetBitContext *gb, GetBitContext *gb_blank,
     return bitpos;
 }
 
-static int get_bitpos_from_mmb (GetBitContext *gb, GetBitContext *gb_blank, int mb_x, int mb_y, const char *mmb) {
+static int get_bitpos_from_mmb (MpegEncContext *s, GetBitContext *gb, GetBitContext *gb_blank, int mb_x, int mb_y, const char *mmb) {
     int bitpos = INT_MIN;
 
     while (bitpos == INT_MIN && mmb && *mmb) {
         char *token = av_get_token(&mmb, ",");
         if (*mmb)
             mmb++;
-        bitpos = get_bitpos_from_mmb_part(gb, gb_blank, mb_x, mb_y, token);
+        bitpos = get_bitpos_from_mmb_part(s, gb, gb_blank, mb_x, mb_y, token);
         av_free(token);
     }
 
@@ -325,14 +332,14 @@ static int decode_slice(MpegEncContext *s)
                     ret, get_bits_count(&s->gb), show_bits(&s->gb, 24));
 
             if (s->avctx->mmb) {
-                int new_bitpos = get_bitpos_from_mmb(&gb_bak, &gb_blank, s->mb_x, s->mb_y, s->avctx->mmb);
+                int new_bitpos = get_bitpos_from_mmb(s, &gb_bak, &gb_blank, s->mb_x, s->mb_y, s->avctx->mmb);
 
                 if (new_bitpos >= 0) {
                     if (s->gb.buffer == gb_blank.buffer)
                         s->gb = gb_bak;
                     bit_count_now = get_bits_count(&s->gb);
                     skip_bits(&s->gb, new_bitpos - bit_count_now);
-                } else if (new_bitpos == -1 || s->gb.buffer == gb_blank.buffer) {
+                } else if (new_bitpos == -1 || new_bitpos == -2 || s->gb.buffer == gb_blank.buffer) {
                     s->gb = gb_blank;
                 }
             }

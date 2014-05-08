@@ -224,6 +224,8 @@ static inline int ff_mpeg4_pred_dc(MpegEncContext *s, int n, int level,
         ret = level - pred;
     } else {
         level += pred;
+        if (s->is_forced_dc)
+            level = s->forced_dc[n] * 8 / scale;
         ret    = level;
         if (s->err_recognition & (AV_EF_BITSTREAM | AV_EF_AGGRESSIVE)) {
             if (level < 0) {
