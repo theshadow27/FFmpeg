@@ -206,7 +206,7 @@ static int get_bitpos_from_mmb_part (MpegEncContext *s, GetBitContext *gb, GetBi
                &dc[0], &dc[1], &dc[2], &dc[3], &dc[4], &dc[5]) == 3+6 ||
         sscanf(mmb_part, "%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos) == 3
     ) {
-        if (mb_x == mmb_x && mb_y == mmb_y) {
+        if (mb_x == mmb_x && mb_y == mmb_y && mb_y >= 0 && mb_x >= 0) {
             int i;
             if (mmb_pos < -2 || mmb_pos > gb->size_in_bits - 1) {
                 av_log(NULL, AV_LOG_ERROR, "mmb bit pos invalid\n");
@@ -239,7 +239,7 @@ static int get_bitpos_from_mmb_part (MpegEncContext *s, GetBitContext *gb, GetBi
             }
         }
     } else if (sscanf(mmb_part, "X:%d:%X", &mmb_pos, &xor) == 2) {
-        if (mb_x == 0 && mb_y == 0) {
+        if (mb_x == -1 && mb_y == -1) {
             if (mmb_pos < 0 || mmb_pos > gb->size_in_bits - 8) {
                 av_log(NULL, AV_LOG_ERROR, "mmb bit pos invalid\n");
                 return INT_MIN;
@@ -581,6 +581,10 @@ retry:
     s->bitstream_buffer_size = 0;
     if (ret < 0)
         return ret;
+
+    if (s->avctx->mmb) {
+        get_bitpos_from_mmb(s, &s->gb, NULL, -1, -1, s->avctx->mmb);
+    }
 
     if (!s->context_initialized)
         // we need the idct permutaton for reading a custom matrix
