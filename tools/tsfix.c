@@ -7,7 +7,7 @@ uint8_t buf[SIZE];
 
 main() {
     int hist[188] = {0};
-    int i=0, len, pid, afc, is_start;
+    int i=0, j, len, pid, afc, is_start;
     while(!feof(stdin)) {
         buf[i++] = getchar();
     }
@@ -17,6 +17,12 @@ main() {
         is_start = buf[i+1] & 0x40;
         pid = ((buf[i+1]<<8) + buf[i+2]) & 0x1FFF;
         afc = (buf[i+3] >> 4) & 3;
+
+#if 1
+        for(j=0; j<188; j++)
+            fprintf(stderr, "%02X ", buf[i+j]);
+        fprintf(stderr, "\n");
+#endif
 
         if (buf[i] != 0x47) {
             fprintf(stderr, "Fixing 0x%02X->0x47\n", buf[i]);
