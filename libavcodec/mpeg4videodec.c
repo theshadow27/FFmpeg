@@ -1167,7 +1167,19 @@ static inline int mpeg4_decode_block(Mpeg4DecContext *ctx, int16_t *block,
                 level = (level ^ SHOW_SBITS(re, &s->gb, 1)) - SHOW_SBITS(re, &s->gb, 1);
                 LAST_SKIP_BITS(re, &s->gb, 1);
             }
-            tprintf(s->avctx, "dct[%d][%d] = %- 4d end?:%d\n", scan_table[i&63]&7, scan_table[i&63] >> 3, level, i>62);
+#ifdef TRACE
+            const uint8_t *debug_scan_table;
+            if (intra && s->ac_pred) {
+                if (dc_pred_dir == 0)
+                    debug_scan_table = ff_alternate_vertical_scan;  /* left */
+                else
+                    debug_scan_table = ff_alternate_horizontal_scan;  /* top */
+            } else {
+                debug_scan_table = ff_zigzag_direct;
+            }
+            int debug_dct_idx = debug_scan_table[i&63];
+            tprintf(s->avctx, "dct[%d][%d] = %- 4d end?:%d\n", debug_dct_idx >> 3, debug_dct_idx&7, level, i>62);
+#endif
             if (i > 62) {
                 i -= 192;
                 if (i & (~63)) {
