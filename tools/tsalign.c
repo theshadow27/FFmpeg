@@ -11,7 +11,7 @@ uint8_t buf[SIZE];
 #define RBIT(p, i, n) ((RB32(p+((i)>>3)) << ((i)&7))>>(32-(n)))
 // #define RBIT(p, i, n) ((RL32(p+((i)>>3)) >> ((i)&7)) & ((-1U)>>(32-(n))))
 
-static flush(uint8_t *p, int start, int end)
+static void flush(uint8_t *p, int start, int end)
 {
     int i;
     int written = 0;
@@ -26,8 +26,7 @@ static flush(uint8_t *p, int start, int end)
     }
 }
 
-main() {
-    int hist[188] = {0};
+int main(int argc, char **argv) {
     int i=0, len;
     int last_match = -1;
     int next_out = 0;
@@ -57,4 +56,6 @@ main() {
         }
     }
     flush(buf, next_out, i);
+
+    return 0;
 }

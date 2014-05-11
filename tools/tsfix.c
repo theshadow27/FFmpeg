@@ -43,11 +43,10 @@ Header headers[] = {
 };
 
 #define GETBIT(p, i) (((p)[(i)>>3] << (((i)&7))>>7)&1)
-#define PUTBIT(p, i, v) (p)[(i)>>3] = ((p)[(i)>>3] | ((v)<<7>>(i&7))) & ((((v)<<7) + 0xFF7F >>(i&7)))
+#define PUTBIT(p, i, v) (p)[(i)>>3] = ((p)[(i)>>3] | ((v)<<7>>((i)&7))) & (((((v)<<7) + 0xFF7F) >>((i)&7)))
 
 
-main() {
-    int hist[188] = {0};
+int main(int argc, char **argv) {
     int i=0, j, k, len, pid, afc, is_start;
     int in_video = 0;
 
@@ -133,4 +132,6 @@ main() {
     }
     for (i=0; i<len; i++)
         putchar(buf[i]);
+
+    return 0;
 }
