@@ -217,6 +217,22 @@ static inline int ff_mpeg4_pred_dc(MpegEncContext *s, int n, int level,
         pred     = a;
         *dir_ptr = 0; /* left */
     }
+
+    // forcing the direction (also stop forcing after all dc_dir's have been forced)
+    if (s->is_forced_dc_dir == 1) {
+        if (s->forced_dc_dir[n] == 1) {
+            pred     = c;
+            *dir_ptr = 1; /* top */
+        } else {
+            pred     = a;
+            *dir_ptr = 0; /* left */
+        }
+
+        if (n >= 5) {
+            s->is_forced_dc_dir = 0;
+        }
+    }
+
     /* we assume pred is positive */
     pred = FASTDIV((pred + (scale >> 1)), scale);
 
@@ -224,8 +240,19 @@ static inline int ff_mpeg4_pred_dc(MpegEncContext *s, int n, int level,
         ret = level - pred;
     } else {
         level += pred;
-        if (s->is_forced_dc)
+
+        // abosulte forcing
+        if (s->is_forced_dc == 1)
             level = s->forced_dc[n] * 8 / scale;
+
+        // relative forcing (also stop forcing after all dc's have been forced)
+        if (s->is_forced_dc == 2) {
+            level += s->forced_dc[n] * 8 / scale;
+            if (n >= 5) {
+                s->is_forced_dc = 0;
+            }
+        }
+
         ret    = level;
         if (s->err_recognition & (AV_EF_BITSTREAM | AV_EF_AGGRESSIVE)) {
             if (level < 0) {

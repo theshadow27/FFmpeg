@@ -656,6 +656,9 @@ typedef struct MpegEncContext {
     int is_forced_dc;
     int forced_dc[12];
 
+    int is_forced_dc_dir;
+    int forced_dc_dir[12];
+
     /* temporary frames used by b_frame_strategy = 2 */
     AVFrame *tmp_frames[MAX_B_FRAMES + 2];
 } MpegEncContext;

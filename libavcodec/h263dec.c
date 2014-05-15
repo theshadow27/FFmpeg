@@ -201,8 +201,13 @@ static int get_bitpos_from_mmb_part (MpegEncContext *s, GetBitContext *gb, GetBi
     int bitpos = INT_MIN;
     int mmb_x, mmb_y, mmb_pos, xor;
     int dc[6]= {0};
+    int dc_dir[6]= {0};
+    int forced_dirs = -1;
 
-    if (sscanf(mmb_part, "%d:%d:%d:%d:%d:%d:%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos,
+    if (
+        sscanf(mmb_part, "%d:%d:%d:%d:%d:%d:%d:%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos,
+               &dc[0], &dc[1], &dc[2], &dc[3], &dc[4], &dc[5], &forced_dirs) == 3+6+1 ||
+        sscanf(mmb_part, "%d:%d:%d:%d:%d:%d:%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos,
                &dc[0], &dc[1], &dc[2], &dc[3], &dc[4], &dc[5]) == 3+6 ||
         sscanf(mmb_part, "%d:%d:%d", &mmb_x, &mmb_y, &mmb_pos) == 3
     ) {
@@ -213,13 +218,44 @@ static int get_bitpos_from_mmb_part (MpegEncContext *s, GetBitContext *gb, GetBi
                 return INT_MIN;
             }
             bitpos = mmb_pos;
-            s->is_forced_dc = (mmb_pos == -2);
-            if (s->is_forced_dc) {
+            if (mmb_pos == -2) {
+                // absolute forcing
+                s->is_forced_dc = 1;
+            }
+            else  if ((mmb_pos >= 0) && (dc[0] != 0 || dc[1] != 0 || dc[2] != 0 || dc[3] != 0 || dc[4] != 0 || dc[5] != 0)) {
+                // relative forcing
+                s->is_forced_dc = 2;
+            }
+            else {
+                s->is_forced_dc = 0;
+            }
+            if (forced_dirs >= 0) {
+                s->is_forced_dc_dir = 1;
+            }
+            if (s->is_forced_dc == 1) {
+                // absolute forcing
                 for (i = 0; i<6; i++)
                     s->forced_dc[i] = dc[i] + 128;
                 memset(dc, 0, sizeof(dc));
             }
-
+            if (s->is_forced_dc == 2) {
+                // relative forcing
+                for (i = 0; i<6; i++)
+                    s->forced_dc[i] = dc[i];
+                memset(dc, 0, sizeof(dc));
+            }
+            if (s->is_forced_dc_dir == 1) {
+                int check_forced = 1;
+                for(i=0; i<6; i++) {
+                    if (forced_dirs & check_forced) {
+                        s->forced_dc_dir[i] = 1; // TOP
+                    }
+                    else {
+                        s->forced_dc_dir[i] = 0; // LEFT
+                    }
+                    check_forced *= 2;
+                }
+            }
             if (mmb_pos == -1 || mmb_pos == -2) {
                 PutBitContext pb;
                 init_put_bits(&pb, gb_blank->buffer, 64);
